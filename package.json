@@ -1,0 +1,18 @@
+{
+  "name": "discord-db-verification-bot",
+  "version": "1.0.0",
+  "description": "Bot for User Validation From Database",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "Karan Obhrai",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "firebase-admin": "^8.12.1",
+    "firebase-functions": "^3.6.2",
+    "nodemailer": "^6.4.10"
+  }
+}
