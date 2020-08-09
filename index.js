@@ -31,6 +31,8 @@ const serviceAccount = {
     "auth_provider_x509_cert_url": process.env.SERVICEAUTHPROVIDERCERT,
     "client_x509_cert_url": process.env.SERVICECLIENTCERT
   }
+
+console.log(serviceAccount);
 const database_uri = {
     "uri": process.env.DATABASEURI
 }
