@@ -23,7 +23,7 @@ const serviceAccount = {
     "type": process.env.SERVICETYPE,
     "project_id": process.env.SERVICEPROJECTID,
     "private_key_id": process.env.SERVICEPRIVATEID,
-    "private_key": process.env.SERVICEPRIVATEKEY.replace('\\n', '\n'),
+    "private_key": process.env.SERVICEPRIVATEKEY.replace(/\\n/g, '\n'),
     "client_email": process.env.SERVICECLIENTEMAIL,
     "client_id": process.env.SERVICECLIENTID,
     "auth_uri": process.env.SERVICEAUTHURI,
