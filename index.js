@@ -32,8 +32,6 @@ const serviceAccount = {
     "client_x509_cert_url": process.env.SERVICECLIENTCERT
   }
 
-console.log(serviceAccount);
-
 const database_uri = {
     "uri": process.env.DATABASEURI
 }
@@ -126,6 +124,7 @@ bot.on('ready', () => {
         log("=============RESTART==============");
         log("==================================");
         log("==================================");
+        // year_up();
         log("Bot running!");
         log("Due to bot being offline, will now verify all 'unverified' users to ensure complete authentication access");
         log("It will also then notify any users who are no longer verified, and tell them to verify their account");
@@ -749,4 +748,18 @@ async function delete_room(meeting_room_name){
     //Deleting
     active_meetings.child(meeting_room_name).remove();
     delete meeting_rooms[meeting_room_name];
+}
+
+/**
+ * Augment Functions
+ */
+function year_up(){
+    guild.members.cache.forEach((member)=>{
+            member.send("New university year, new you :) For security reasons we ask that you reauthenticate your DoCSoc membership and update your details for the upcoming year!");
+            member.send("You will be unable to use the server normally until you update your details");
+            if(!member.user.bot){
+                member.roles.set([]);
+            }
+    });
+    verified_users.remove();       
 }
