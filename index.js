@@ -16,6 +16,7 @@ const email = {
     "user": process.env.EMAILUSER,
     "pass": process.env.EMAILPASS
 }
+console.log(email);
 const auth = {
     "token": process.env.DISCORDTOKEN
 }
@@ -567,6 +568,7 @@ async function sync_meetings(){
  * authentication URL
  */
 function notify_unverified_users(){
+    return;
     var notifications = 0;
     if(configured){
         log("Beginning: Notifiying Unverified Users");
