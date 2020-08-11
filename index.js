@@ -16,7 +16,6 @@ const email = {
     "user": process.env.EMAILUSER,
     "pass": process.env.EMAILPASS
 }
-console.log(email);
 const auth = {
     "token": process.env.DISCORDTOKEN
 }
