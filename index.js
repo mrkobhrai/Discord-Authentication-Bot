@@ -650,7 +650,9 @@ async function configure(){
 
         //Create email transporter object
         email_transporter = nodemailer.createTransport({
-            service: email.service,
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, 
             auth: {
                 user: email.user,
                 pass: email.pass
