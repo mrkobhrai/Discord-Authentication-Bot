@@ -166,8 +166,17 @@ bot.on('message', message => {
  * Check for command '!help' which lists all commands
  */
 bot.on('message', message => {
-    if(message.content === '!help' && message.member != null && message.member.hasPermission("ADMINISTRATOR")){
-        print_commands();
+    if(message.content === '!help' && message.member != null){
+        if(message.member.hasPermission("ADMINISTRATOR")){
+            print_commands();
+        }else{
+            var member = message.member;
+            member.send("=====================COMMANDS====================");
+            member.send("!help (Shows commands)");
+            member.send("!meeting [<user>] (Creates a meeting of users, gives a voice and text chat)");
+            member.send("=================================================");
+        }
+        message.delete();
     }
 });
 
@@ -463,6 +472,7 @@ function on_queue(snapshot, prevChildKey){
                     verified_users.child(shortcode).set({"username": member.user.username, "name": db_user.name, "disc_id" : userid, "email": db_user.email, "course": course, "year": year});
                     member.send("Well done! You've been verified as a member!");
                     member.send("You are now free to explore the server and join in with DoCSoc Events!");
+                    member.send("Use the '!help' command in any channel to get a list of available commands");
                 }else{
                     log("DocSoc Member: " + db_user.name + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id);
                     member.send("This shortcode is already registered to a Discord User!");
@@ -601,6 +611,7 @@ function send_user_auth_url(member){
     member.send("Just one last step to get into the IC DoCSoc server :)")
     member.send("To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:");
     member.send("https://docsoc-auth.web.app/"+ member.id);
+    member.send("Ignore any warnings about this page being unsafe, it is perfectly secure");
     member.send("This link will only work for your account! There is no point sharing it with other users");
     log("Sent custom URL to user: " + member.displayName + " for verification");
 }
