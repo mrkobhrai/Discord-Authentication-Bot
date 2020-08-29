@@ -610,7 +610,7 @@ function notify_unverified_users(){
 function send_user_auth_url(member){
     member.send("Just one last step to get into the IC DoCSoc server :)")
     member.send("To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:");
-    member.send("https://docsoc-auth.web.app/"+ member.id);
+    member.send("https://discord.docsoc.co.uk/"+ member.id);
     member.send("This link will only work for your account! There is no point sharing it with other users");
     log("Sent custom URL to user: " + member.displayName + " for verification");
 }
