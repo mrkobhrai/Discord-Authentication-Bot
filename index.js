@@ -822,8 +822,8 @@ bot.on('message', async function(message){
         enter_draw.child(shortcode[0]).set(true);
         message.member.send("You've been added into the random draw with a chance of winning a deliveroo voucher!");
         message.member.send("Please note you will only be added to the draw once :)");
+        message.delete();
     }
-    message.delete();
 })
 
 bot.on('message', async function(message){
