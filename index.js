@@ -334,10 +334,11 @@ bot.on('voiceStateUpdate', function(oldState, newState){
         member_ids.push(message.author.id);
         var has_name = false;
         var meeting_room_name;
+        var base_name = message.member.nickname + "s_room_";
         for(var i = 1; !has_name; i++){
-            if(!Object.keys(meeting_rooms).includes("meeting_room_" + i) || meeting_rooms["meeting_room_" + i] == false){
+            if(!Object.keys(meeting_rooms).includes(base_name + i) || meeting_rooms[base_name + i] == false){
                 has_name = true;
-                meeting_room_name ="meeting-room-" + i;
+                meeting_room_name = base_name + i;
                 meeting_rooms[meeting_room_name] =  true;
             }
         }
@@ -372,10 +373,10 @@ bot.on('voiceStateUpdate', function(oldState, newState){
             type : 'text', 
             parent : MEETING_CATEGORY,
             permissionOverwrites: [
-                // {
-                    // id: server.EVERYONE_ROLE_SAFE,
-                    // deny: ['VIEW_CHANNEL']
-                // },
+                {
+                    id: server.EVERYONE_ROLE_SAFE,
+                    deny: ['VIEW_CHANNEL']
+                },
                 {
                     id: role.id,
                     allow: ['VIEW_CHANNEL']
