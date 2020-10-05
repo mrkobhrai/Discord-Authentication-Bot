@@ -293,15 +293,38 @@ bot.on('voiceStateUpdate', function(oldState, newState){
     if(message.content.startsWith('!meeting') && message.member != null && message.member.roles.cache.find( r=> r.id === server.roles.Verified ) && configured){
        //Check if user has active room
        var has_room = false;
+       var room = null; 
        for(var room_name in meeting_rooms){
-           has_room |= meeting_rooms[room_name]["owner_id"] == message.author.id;
+           if(meeting_rooms[room_name]["owner_id"] == message.author.id){
+               has_room = true;
+               room = room_name;
+           }
        }
 
        if(has_room){
-           message.member.send("You already own a room! Please wait for this to expire before making another one!");
-           message.delete();
-           return;
-       }
+        meeting_room = meeting_rooms[room];
+        var role = await get_role(meeting_room.role);
+        message.mentions.users.forEach((member)=>{
+             if(!meeting_room.members.includes(member.id))
+             {
+                 get_member(member.id).roles.add(role);
+                 member.send("You've been added to " + room + " room by the user " + get_member(message.author.id).nickname);
+                 meeting_room.members.push(member.id);
+             }
+         });
+         meeting_rooms[room] = {
+             "voice": meeting_room.voice,
+             "chat": meeting_room.chat,
+             "members" : meeting_room.members,
+             "owner_id" : meeting_room.owner_id,
+             "owner_shortcode" : meeting_room.owner_shortcode,
+             "role" : meeting_room.role,
+             };
+        active_meetings.child(room).set(meeting_rooms[room]);
+        meeting_rooms[room]["timeout"] = meeting_room.timeout;
+        message.delete();
+        return;
+    }
        
        //Get the message senders shortcode.
         var author_shortcode = (await get_shortcode(message.author.id))[0];
@@ -333,10 +356,10 @@ bot.on('voiceStateUpdate', function(oldState, newState){
             type : 'voice', 
             parent : MEETING_CATEGORY,
             permissionOverwrites: [
-                {
-                    id: server.EVERYONE_ROLE_SAFE,
-                    deny: ['VIEW_CHANNEL']
-                },
+                // {
+                //     id: server.EVERYONE_ROLE_SAFE,
+                //     deny: ['VIEW_CHANNEL']
+                // },
                 {
                     id: role.id,
                     allow: ['VIEW_CHANNEL']
@@ -349,10 +372,10 @@ bot.on('voiceStateUpdate', function(oldState, newState){
             type : 'text', 
             parent : MEETING_CATEGORY,
             permissionOverwrites: [
-                {
-                    id: server.EVERYONE_ROLE_SAFE,
-                    deny: ['VIEW_CHANNEL']
-                },
+                // {
+                    // id: server.EVERYONE_ROLE_SAFE,
+                    // deny: ['VIEW_CHANNEL']
+                // },
                 {
                     id: role.id,
                     allow: ['VIEW_CHANNEL']
@@ -608,6 +631,7 @@ function notify_unverified_users(){
  * Given a member object, sends the member their custom auth url
  */
 function send_user_auth_url(member){
+    return;
     member.send("Just one last step to get into the IC DoCSoc server :)")
     member.send("To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:");
     member.send("https://discord.docsoc.co.uk/"+ member.id);
