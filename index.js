@@ -268,7 +268,7 @@ bot.on('voiceStateUpdate', function(oldState, newState){
             if(oldState.channel.members.size == 0){
                 var meeting_room = meeting_rooms[name];
                 get_channel(meeting_room.chat).send("There is no one in the voice chat, this means the meeting will end in " + server.MEETING_TIMEOUT_TIME + " seconds");
-                get_member(meeting_room["owner_id"]).send("Your meeting room "  + name + " will delete in " + server.MEETING_TIMEOUT_TIME + "seconds unless the voice chat becomes active in this time period. You have been emailed a copy of the meeting chat");
+                get_member(meeting_room["owner_id"]).send("Your meeting room "  + name + " will delete in " + server.MEETING_TIMEOUT_TIME + " seconds unless the voice chat becomes active in this time period. You have been emailed a copy of the meeting chat");
                 meeting_rooms[name]["timeout"] = setTimeout(function(){
                     delete_room(oldState.channel.name);
                 }, server.MEETING_TIMEOUT_TIME * 1000);
@@ -599,7 +599,7 @@ async function sync_meetings(){
                     delete_room(room_name);
                 }, server.MEETING_TIMEOUT_TIME * 1000);
                 var owner = get_member(room.owner_id);
-                owner.send("Your meeting room " + room_name + " will delete in " + server.MEETING_TIMEOUT_TIME + " unless the voice chat becomes active in this time period");
+                owner.send("Your meeting room " + room_name + " will delete in " + server.MEETING_TIMEOUT_TIME + " seconds unless the voice chat becomes active in this time period");
             }   
         }
     }
@@ -631,7 +631,6 @@ function notify_unverified_users(){
  * Given a member object, sends the member their custom auth url
  */
 function send_user_auth_url(member){
-    return;
     member.send("Just one last step to get into the IC DoCSoc server :)")
     member.send("To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:");
     member.send("https://discord.docsoc.co.uk/"+ member.id);
