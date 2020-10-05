@@ -632,7 +632,6 @@ function notify_unverified_users(){
  * Given a member object, sends the member their custom auth url
  */
 function send_user_auth_url(member){
-    return;
     member.send("Just one last step to get into the IC DoCSoc server :)")
     member.send("To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:");
     member.send("https://discord.docsoc.co.uk/"+ member.id);
@@ -823,7 +822,7 @@ bot.on('message', async function(message){
         log("Fresher "+ shortcode + " entered into the draw");
         enter_draw.child(shortcode[0]).set(true);
         message.member.send("You've been added into the random draw with a chance of winning a deliveroo voucher!");
-        message.member.send("Please note you will only be added to the draw once :) ");
+        message.member.send("Please note you will only be added to the draw once :)");
     }
     message.delete();
 })
