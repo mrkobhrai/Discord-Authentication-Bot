@@ -809,34 +809,3 @@ function year_up(){
     });
     verified_users.remove();       
 }
-
-
-enter_draw = database.ref('/fresher_game_night_draw');
-bot.on('message', async function(message){
-    if(message.channel.id==="762730212537401374" && message.content === '!enter' && message.member != null && message.member.roles.cache.find( r=> r.id === server.years["1st"]) && configured){
-        var shortcode = await get_shortcode(message.member.id);
-        if(shortcode.length <= 0){
-            return;
-        }
-        log("Fresher "+ shortcode + " entered into the draw");
-        enter_draw.child(shortcode[0]).set(true);
-        message.member.send("You've been added into the random draw with a chance of winning a deliveroo voucher!");
-        message.member.send("Please note you will only be added to the draw once :)");
-        message.delete();
-    }
-})
-
-bot.on('message', async function(message){
-    // Freshers draw
-    if(message.channel.id==="762730212537401374" && message.content === '!withdraw' && message.member != null && message.member.roles.cache.find( r=> r.id === server.years["1st"]) && configured){
-        var shortcode = await get_shortcode(message.member.id);
-        if(shortcode.length <= 0){
-            return;
-        }
-        log("Fresher "+ shortcode + " withdrawn from the draw");
-        enter_draw.child(shortcode[0]).set(false);
-        message.member.send("You've been removed from the draw!")
-        message.delete();
-
-    }
-})
