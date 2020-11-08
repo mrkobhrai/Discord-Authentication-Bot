@@ -819,7 +819,7 @@ bot.on('message', async function(message){
         if(shortcode.length <= 0){
             return;
         }
-        log("Fresher "+ shortcode + " entered into the draw");
+        log("Shortcode: "+ shortcode + " entered into the draw");
         enter_draw.child(shortcode[0]).set(true);
         message.member.send("You've been added into the random draw with a chance of winning a deliveroo voucher!");
         message.member.send("Please note you will only be added to the draw once :)");
@@ -828,13 +828,12 @@ bot.on('message', async function(message){
 })
 
 bot.on('message', async function(message){
-    // Freshers draw
     if(message.channel.id===draw_channel && message.content === '!withdraw' && message.member != null && configured){
         var shortcode = await get_shortcode(message.member.id);
         if(shortcode.length <= 0){
             return;
         }
-        log("Fresher "+ shortcode + " withdrawn from the draw");
+        log("Shortcode: "+ shortcode + " withdrawn from the draw");
         enter_draw.child(shortcode[0]).set(false);
         message.member.send("You've been removed from the draw!")
         message.delete();
