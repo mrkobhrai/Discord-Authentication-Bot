@@ -623,14 +623,12 @@ async function notify_unverified_users(){
         log("Beginning: Notifiying Unverified Users");
         guild.members.fetch().then((members)=>{
             members.forEach((guildMember)=>{
-                console.log(guildMember);
                 if(!guildMember.roles.cache.find( role => role.id === server.roles.Verified)){
                     send_user_auth_url(guildMember);
                     notifications++;
                 }
             });
         })
-        //     
         log(notifications + " users notified!");
         log("Ending: Notifiying Unverified Users");
     }else{
