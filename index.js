@@ -814,7 +814,7 @@ const draw_name = "games_night_draw"
 const draw_channel = "775124717643235328"
 const enter_draw = database.ref("/" + draw_name);
 bot.on('message', async function(message){
-    if(message.channel.id=== draw_channel && message.content === '!enter' && message.member != null && configured){
+    if(message.channel.id=== draw_channel && message.content === '!enter' && message.member != null && configured && message.member.roles.cache.find( r=> r.id === server.roles.Verified)){
         var shortcode = await get_shortcode(message.member.id);
         if(shortcode.length <= 0){
             return;
@@ -828,7 +828,7 @@ bot.on('message', async function(message){
 })
 
 bot.on('message', async function(message){
-    if(message.channel.id===draw_channel && message.content === '!withdraw' && message.member != null && configured){
+    if(message.channel.id===draw_channel && message.content === '!withdraw' && message.member != null && configured && message.member.roles.cache.find( r=> r.id === server.roles.Verified )){
         var shortcode = await get_shortcode(message.member.id);
         if(shortcode.length <= 0){
             return;
