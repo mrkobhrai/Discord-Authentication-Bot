@@ -449,13 +449,13 @@ queue_ref.on("child_added", async function(snapshot,prevChildKey){
     on_queue(snapshot,prevChildKey)
 });
 
-function on_queue(snapshot, prevChildKey){
+async function on_queue(snapshot, prevChildKey){
     if(!configured){
         log("Not configured, can't deal with queue!");
         return;
     }
     db_user = snapshot.val();
-    var member = get_member(db_user.id);
+    var member = await get_member_uncached(db_user.id);
     if(member == null){
         log("User not found through login with shortcode:" + db_user.name + ". Discord ID attempted:" + db_user.id);
         queue_ref.child(snapshot.key).remove();
@@ -552,6 +552,13 @@ function get_member(id){
     return guild.member(id);
 }
 
+/* 
+ * Gets a member given an id (not cached)
+ */
+async function get_member_uncached(id){
+    return await guild.members.fetch(id);
+}
+
 /*
  * Prints the server configuration
  */
@@ -610,20 +617,24 @@ async function sync_meetings(){
  * This function iterates through all unverified users and sends them their custom
  * authentication URL
  */
-function notify_unverified_users(){
+async function notify_unverified_users(){
     var notifications = 0;
     if(configured){
         log("Beginning: Notifiying Unverified Users");
-        guild.members.cache.forEach(guildMember => {
-            if(!guildMember.roles.cache.find( role => role.id === server.roles.Verified)){
-                send_user_auth_url(guildMember);
-                notifications++;
-            }
-        });
+        guild.members.fetch().then((members)=>{
+            members.forEach((guildMember)=>{
+                console.log(guildMember);
+                if(!guildMember.roles.cache.find( role => role.id === server.roles.Verified)){
+                    send_user_auth_url(guildMember);
+                    notifications++;
+                }
+            });
+        })
+        //     
         log(notifications + " users notified!");
         log("Ending: Notifiying Unverified Users");
     }else{
-        log("Can't clear backlog, configuration not set!");
+        log("Can't send verification stuff, configuration not set!");
     }
 }
 
