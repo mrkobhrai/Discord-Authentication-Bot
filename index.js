@@ -627,9 +627,10 @@ async function notify_unverified_users(){
                     notifications++;
                 }
             });
+            log(notifications + " users notified!");
+            log("Ending: Notifiying Unverified Users");
         })
-        log(notifications + " users notified!");
-        log("Ending: Notifiying Unverified Users");
+        
     }else{
         log("Can't send verification stuff, configuration not set!");
     }
