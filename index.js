@@ -818,33 +818,3 @@ function year_up(){
     });
     verified_users.remove();       
 }
-
-const draw_name = "games_night_draw"
-const draw_channel = "775124717643235328"
-const enter_draw = database.ref("/" + draw_name);
-bot.on('message', async function(message){
-    if(message.channel.id=== draw_channel && message.content === '!enter' && message.member != null && configured && message.member.roles.cache.find( r=> r.id === server.roles.Verified)){
-        var shortcode = await get_shortcode(message.member.id);
-        if(shortcode.length <= 0){
-            return;
-        }
-        log("Shortcode: "+ shortcode + " entered into the draw");
-        enter_draw.child(shortcode[0]).set(true);
-        message.member.send("You've been added into the random draw with a chance of winning a deliveroo voucher!");
-        message.member.send("Please note you will only be added to the draw once :)");
-        message.delete();
-    }
-})
-
-bot.on('message', async function(message){
-    if(message.channel.id===draw_channel && message.content === '!withdraw' && message.member != null && configured && message.member.roles.cache.find( r=> r.id === server.roles.Verified )){
-        var shortcode = await get_shortcode(message.member.id);
-        if(shortcode.length <= 0){
-            return;
-        }
-        log("Shortcode: "+ shortcode + " withdrawn from the draw");
-        enter_draw.child(shortcode[0]).set(false);
-        message.member.send("You've been removed from the draw!")
-        message.delete();
-    }
-})
