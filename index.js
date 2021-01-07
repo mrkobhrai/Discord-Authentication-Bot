@@ -214,7 +214,7 @@ async function on_queue(snapshot, prevChildKey){
     }else{
         var shortcode = db_user.shortcode;
         verified_users.child(shortcode).once('value', async function(fetched_snapshot){
-            var alternate_shortcode = await get_shortcode(db_user.id).then(async function(alternate_shortcode){
+            await get_shortcode(db_user.id).then(async function(alternate_shortcode){
                 if((alternate_shortcode[0] || shortcode) != shortcode){
                     member.send("IMPORTANT:You're already verified under "+alternate_shortcode[0]+"! Someone just tried to reverify this account! \n\nDid you send someone your authentication link or try and reuse it yourself! This account is already registered to a shortcode. If you wish to update any information e.g. course or year, please contact an admin");
                     log("Member already verified with discord id " + member.id + " and member with shortcode: " + shortcode + " attempted to reverify this account. This is not allowed!");
@@ -272,15 +272,6 @@ function log(log){
 function get_channel(id){
     return guild.channels.cache.get(id);
 }
-
-/*
- * Gets a role given an id 
- * Pre: configured
- */
-async function get_role(role_id){
-    var result = await guild.roles.fetch(role_id).then(role=>role);
-    return result;
-} 
 
 /* 
  * Gets a member given an id (not cached)
