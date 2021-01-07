@@ -58,8 +58,6 @@ var log_channel;
 var welcome_channel;
 var logbook = [];
 
-var email_transporter;
-
 /*
  * Initialises Firebase API keys
  */
