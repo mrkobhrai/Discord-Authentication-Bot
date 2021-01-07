@@ -282,14 +282,6 @@ async function get_role(role_id){
     return result;
 } 
 
-/*
- * Gets a member given an id 
- * Pre: configured
- */
-function get_member(id){
-    return guild.member(id);
-}
-
 /* 
  * Gets a member given an id (not cached)
  */
@@ -385,27 +377,6 @@ async function configure(){
         guild = bot.guilds.cache.get(server.SERVER_ID);
         log_channel = get_channel(server.LOG_CHANNEL_ID);
         welcome_channel = get_channel(server.WELCOME_CHANNEL_ID);
-        MEETING_CATEGORY = get_channel(server.MEETING_ROOM_CATEGORY);
-        //Populate roles
-        for(var role in server.roles){
-            //Left as console log to reduce initialisation spam
-            //Errors will be sent to server
-            console.log("Fetching role: " + role);
-            course_roles[role] = await get_role(server.roles[role]).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
-        }
-
-        for(var role in server.years){
-            //Left as console log to reduce initialisation spam
-            //Errors will be sent to server
-            console.log("Fetching year role: " + role);
-            year_roles[role] = await get_role(server.years[role]).then((role)=> role).catch(log);
-        }
-        //Left as console log to reduce initialisation spam
-        //Errors will be sent to server
-        console.log("Fetching committee role");
-        COMMITTEE_ROLE = await get_role(server.COMMITTEE_ROLE_SAFE).then((role)=>role).catch(log);
-
-
     } catch(error){
         log("FATAL!!!");
         log("CONFIGURATION FAILED WITH ERROR:");
