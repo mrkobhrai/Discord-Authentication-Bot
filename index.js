@@ -220,9 +220,9 @@ async function on_queue(snapshot, prevChildKey){
                         await member.roles.set([]);
                     }
                     member.setNickname(db_user.name).catch((error)=>log("Can't set the nickname:" + db_user.name + " for this user(id):" + member.id + "->" + error));
-                    member.roles.add(course_roles["Verified"])
+                    member.roles.add(verified_role)
 
-                    log("DoCSoc Member : "+ db_user.name +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id +" and course group: "+course+" and year: "+ year +"!");
+                    log("DoCSoc Member : "+ db_user.name +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id);
                     var userid = member.toJSON().userID.toString();
                     verified_users.child(shortcode).set({"username": member.user.username, "name": db_user.name, "disc_id" : userid});
                     member.send("Well done! You've been verified as a member!");
