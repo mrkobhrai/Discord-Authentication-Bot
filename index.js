@@ -44,14 +44,9 @@ const admin = require("firebase-admin");
 /*
  * Part of the configuration variables
  * Guild is the Discord Server
- * Course roles stores all the roles related to courses and the 'Verified' role
- * Year roles store all roles related to years e.g. 1st, 2nd..
- * Committee role is kept seperate so has to be accessed directly
- * Meeting category refers to the Category of channels where meetings will be stored
  * Log channel is the channel where all of this bot logs are sent
  * Welcome channel is the channel where it is announced when a new user joins
  * Log book is the current logs stored in the session, these are not stored in the database
- * The email transporter is the variable which stores the open SMTP channel for sending emails
  */
 var guild;
 var log_channel;
@@ -89,7 +84,7 @@ const verified_users = database.ref("/users");
  *  Configured variable to ensure configuration worked correctly
  */
 var configured = false;
-
+const verified_role = null;
 /*
  * ==================================================
  *              Discord Event Listeners
@@ -214,7 +209,7 @@ async function on_queue(snapshot, prevChildKey){
         verified_users.child(shortcode).once('value', async function(fetched_snapshot){
             await get_shortcode(db_user.id).then(async function(alternate_shortcode){
                 if((alternate_shortcode[0] || shortcode) != shortcode){
-                    member.send("IMPORTANT:You're already verified under "+alternate_shortcode[0]+"! Someone just tried to reverify this account! \n\nDid you send someone your authentication link or try and reuse it yourself! This account is already registered to a shortcode. If you wish to update any information e.g. course or year, please contact an admin");
+                    member.send("IMPORTANT:You're already verified under "+alternate_shortcode[0]+"! Someone just tried to reverify this account! \n\nDid you send someone your authentication link or try and reuse it yourself! This account is already registered to a shortcode.");
                     log("Member already verified with discord id " + member.id + " and member with shortcode: " + shortcode + " attempted to reverify this account. This is not allowed!");
                     queue_ref.child(snapshot.key).remove();
                     return;
@@ -366,6 +361,7 @@ async function configure(){
         guild = bot.guilds.cache.get(server.SERVER_ID);
         log_channel = get_channel(server.LOG_CHANNEL_ID);
         welcome_channel = get_channel(server.WELCOME_CHANNEL_ID);
+        
     } catch(error){
         log("FATAL!!!");
         log("CONFIGURATION FAILED WITH ERROR:");
