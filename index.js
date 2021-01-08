@@ -361,6 +361,7 @@ async function configure(){
         guild = bot.guilds.cache.get(server.SERVER_ID);
         log_channel = get_channel(server.LOG_CHANNEL_ID);
         welcome_channel = get_channel(server.WELCOME_CHANNEL_ID);
+        verified_role = await get_role(server.roles[role]).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
         
     } catch(error){
         log("FATAL!!!");
