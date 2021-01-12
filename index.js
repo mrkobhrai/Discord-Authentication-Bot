@@ -3,7 +3,6 @@
  * Retrieves configuration for bot runtime
  */
 const Discord = require('discord.js');
-const nodemailer = require('nodemailer');
 const server = require('./disc_config.json')
 
 /*
@@ -11,11 +10,6 @@ const server = require('./disc_config.json')
  */
 const dotenv = require('dotenv');
 dotenv.config();
-const email = {
-    "service": process.env.EMAILSERVICE,
-    "user": process.env.EMAILUSER,
-    "pass": process.env.EMAILPASS
-}
 const auth = {
     "token": process.env.DISCORDTOKEN
 }
