@@ -163,7 +163,7 @@ bot.on('message', message => {
 * When a member is added, log them joining and send them their custom auth url
 */
 bot.on('guildMemberAdd', member => {
-    member.send("Welcome to the DoCSoc Discord Server!");
+    member.send("Welcome to the DoCSoc CTF Discord Server!");
     log("New Member Joined:" + member.displayName);
     if(configured){
         welcome_channel.send("Hello <@" + member.id + ">! I've sent you a link to verify your status as a DoCSoc Member!\nPlease check your DMs!");
@@ -319,7 +319,6 @@ async function notify_unverified_users(){
  * Given a member object, sends the member their custom auth url
  */
 function send_user_auth_url(member){
-    return;
     send(member,"Just one last step to get into the IC CTF DoCSoc server :)")
     send(member,"To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:");
     send(member,"http://ctfdiscord.docsoc.co.uk/"+ member.id);
