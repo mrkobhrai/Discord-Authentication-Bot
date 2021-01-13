@@ -300,7 +300,7 @@ async function notify_unverified_users(){
         log("Beginning: Notifiying Unverified Users");
         guild.members.fetch().then((members)=>{
             members.forEach((guildMember)=>{
-                if(!guildMember.roles.cache.find( role => role.id === server.roles.Verified)){
+                if(!guildMember.roles.cache.find( role => role.id === server.VERIFIED_ROLE)){
                     send_user_auth_url(guildMember);
                     notifications++;
                 }
@@ -319,11 +319,18 @@ async function notify_unverified_users(){
  * Given a member object, sends the member their custom auth url
  */
 function send_user_auth_url(member){
-    member.send("Just one last step to get into the IC DoCSoc server :)")
-    member.send("To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:");
-    member.send("https://discord.docsoc.co.uk/"+ member.id);
-    member.send("This link will only work for your account! There is no point sharing it with other users");
+    send(member,"Just one last step to get into the IC CTF DoCSoc server :)")
+    send(member,"To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:");
+    send(member,"http://ctfdiscord.docsoc.co.uk/"+ member.id);
+    send(member,"This link will only work for your account! There is no point sharing it with other users");
     log("Sent custom URL to user: " + member.displayName + " for verification");
+}
+
+function send(member, msg) {
+    member.send(msg).catch((error)=>{
+        console.log(error);
+        console.log(member.displayName);
+    });
 }
 
 /*
@@ -355,7 +362,7 @@ async function configure(){
         guild = bot.guilds.cache.get(server.SERVER_ID);
         log_channel = get_channel(server.LOG_CHANNEL_ID);
         welcome_channel = get_channel(server.WELCOME_CHANNEL_ID);
-        verified_role = await get_role(server.roles[role]).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
+        verified_role = await get_role(server.VERIFIED_ROLE).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
         
     } catch(error){
         log("FATAL!!!");
@@ -382,3 +389,12 @@ function year_up(){
     });
     verified_users.remove();       
 }
+
+/*
+ * Gets a role given an id 
+ * Pre: configured
+ */
+async function get_role(role_id){
+    var result = await guild.roles.fetch(role_id).then(role=>role);
+    return result;
+} 
