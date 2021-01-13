@@ -78,7 +78,7 @@ const verified_users = database.ref("/users");
  *  Configured variable to ensure configuration worked correctly
  */
 var configured = false;
-const verified_role = null;
+var verified_role = null;
 /*
  * ==================================================
  *              Discord Event Listeners
@@ -271,13 +271,13 @@ async function get_member_uncached(id){
  * Prints the server configuration
  */
 function print_server_config(){
-    log("Server Config:\n-> SERVER: " + guild.toString() + "\n-> LOG CHANNEL: " + log_channel.name + "\n-> Meeting Timeout Time(s):" + server.MEETING_TIMEOUT_TIME);    
+    log("Server Config:\n-> SERVER: " + guild.toString() + "\n-> LOG CHANNEL: " + log_channel.name + "\n");    
 }
 
 /*
  * Prints the commands 
  */
-function print_commands(){
+function print_commands() {
     log("-----------COMMANDS-------------");
     log("!help (Shows commands)");
     log("!notify_unverified (Sends URL's to all unverified users)");
@@ -319,6 +319,7 @@ async function notify_unverified_users(){
  * Given a member object, sends the member their custom auth url
  */
 function send_user_auth_url(member){
+    return;
     send(member,"Just one last step to get into the IC CTF DoCSoc server :)")
     send(member,"To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:");
     send(member,"http://ctfdiscord.docsoc.co.uk/"+ member.id);
@@ -362,7 +363,7 @@ async function configure(){
         log_channel = get_channel(server.LOG_CHANNEL_ID);
         welcome_channel = get_channel(server.WELCOME_CHANNEL_ID);
         verified_role = await get_role(server.VERIFIED_ROLE).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
-        
+        console.log("Verified role" + verified_role);
     } catch(error){
         log("FATAL!!!");
         log("CONFIGURATION FAILED WITH ERROR:");
