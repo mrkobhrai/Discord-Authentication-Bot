@@ -328,8 +328,7 @@ function send_user_auth_url(member){
 
 function send(member, msg) {
     member.send(msg).catch((error)=>{
-        console.log(error);
-        console.log(member.displayName);
+        log(error + "when trying to send message to member: " + member.displayName);
     });
 }
 
