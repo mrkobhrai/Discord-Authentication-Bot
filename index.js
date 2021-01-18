@@ -47,7 +47,6 @@ const admin = require("firebase-admin");
  * Course roles stores all the roles related to courses and the 'Verified' role
  * Year roles store all roles related to years e.g. 1st, 2nd..
  * Committee role is kept seperate so has to be accessed directly
- * Meeting category refers to the Category of channels where meetings will be stored
  * Log channel is the channel where all of this bot logs are sent
  * Welcome channel is the channel where it is announced when a new user joins
  * Log book is the current logs stored in the session, these are not stored in the database
@@ -290,6 +289,7 @@ bot.on('voiceStateUpdate', function(oldState, newState){
 * Meeting rooms can only be created by a verified user, but can include non-verified users
 * At the moment, meeting rooms must expire before you can make another one
 */
+/*
  bot.on('message', async function(message){
      //Check the command begins with !meeting and is done by a verified member, and configuration is complete
     if(message.content.startsWith('!meeting') && message.member != null && message.member.roles.cache.find( r=> r.id === server.roles.Verified ) && configured){
@@ -433,7 +433,7 @@ bot.on('voiceStateUpdate', function(oldState, newState){
         message.delete();
     }
 });
-
+*/
 /*
  * ==================================================
  *                DATABASE LISTENERS
@@ -586,6 +586,7 @@ function print_commands(){
  * Load meeting_rooms in via the database
  * This function exists in case the bot restarts during a meeting  
  */
+/*
 async function sync_meetings(){
     log("Beginning sync of active meeting rooms");
     var fetched_rooms = (await active_meetings.once('value'));
@@ -613,6 +614,7 @@ async function sync_meetings(){
         }
     }
 }
+*/
 
 /*
  * This function iterates through all unverified users and sends them their custom
@@ -691,9 +693,11 @@ async function configure(){
             curr_guild.guild = bot.guilds.cache.get(server.SERVER_ID);
             curr_guild.log_channel = get_channel(server.LOG_CHANNEL_ID, curr_guild.guild);
             curr_guild.welcome_channel = get_channel(server.WELCOME_CHANNEL_ID, curr_guild.guild);
-            curr_guild.meeting_category = get_channel(server.MEETING_ROOM_CATEGORY, curr_guild.guild);
+            
+            // curr_guild.meeting_category = get_channel(server.MEETING_ROOM_CATEGORY, curr_guild.guild);
             //Update meeting_rooms
-            await sync_meetings();
+            // await sync_meetings();
+
             //Populate roles
             curr_guild.course_roles = {};
             for(var role in server.roles){
@@ -729,6 +733,7 @@ async function configure(){
 * Delete a meeting room, associated chats and roles given it's ID
 * Then sends emails to all the members of the chat containing the meeting room chat history
 */
+/*
 async function delete_room(meeting_room_name){
     if(meeting_rooms[meeting_room_name] == null){
         log("Attempted to delete meeting room with voice channel name" + meeting_room_name + " however it failed because that doesn't exist inside the cache");
@@ -807,4 +812,4 @@ async function delete_room(meeting_room_name){
     active_meetings.child(meeting_room_name).remove();
     delete meeting_rooms[meeting_room_name];
 }
-
+*/
