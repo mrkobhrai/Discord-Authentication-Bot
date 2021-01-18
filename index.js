@@ -99,17 +99,7 @@ var configured = false;
 bot.on('ready', () => {
     log("Attempting to run bot!");
     configure().then(function(){
-        log("==================================");
-        log("==================================");
-        log("=============RESTART==============");
-        log("==================================");
-        log("==================================");
-        // year_up();
         log("Bot running!");
-        log("Due to bot being offline, will now verify all 'unverified' users to ensure complete authentication access");
-        log("It will also then notify any users who are no longer verified, and tell them to verify their account");
-        log("Commands:");
-        print_commands();
         setTimeout(function(){notify_unverified_users()}, 2000);
     }).catch(log);
 });
@@ -383,6 +373,7 @@ async function get_member_uncached(id, guild){
  * Prints the server configuration
  */
 function print_server_config(){
+    return;
     log("Server Config:\n-> SERVER: " + guild.toString() + "\n-> LOG CHANNEL: " + log_channel.name + "\n-> Meeting Timeout Time(s):" + server.MEETING_TIMEOUT_TIME);    
 }
 
@@ -409,16 +400,19 @@ async function notify_unverified_users(){
     var notifications = 0;
     if(configured){
         log("Beginning: Notifiying Unverified Users");
-        guild.members.fetch().then((members)=>{
-            members.forEach((guildMember)=>{
-                if(!guildMember.roles.cache.find( role => role.id === server.roles.Verified)){
-                    send_user_auth_url(guildMember);
-                    notifications++;
-                }
+        for(var guild_id in guilds){
+            guild = guilds[guild_id].guild;
+            guild.members.fetch().then((members)=>{
+                members.forEach((guildMember)=>{
+                    if(!guildMember.roles.cache.find( role => role.id === guild.roles.Verified)){
+                        send_user_auth_url(guildMember);
+                        notifications++;
+                    }
+                });
+                log(notifications + " users notified!");
+                log("Ending: Notifiying Unverified Users");
             });
-            log(notifications + " users notified!");
-            log("Ending: Notifiying Unverified Users");
-        })
+        }
         
     }else{
         log("Can't send verification stuff, configuration not set!");
@@ -474,7 +468,8 @@ async function configure(){
                 pass: email.pass
             }
         });
-        for(var server in servers){
+        for(var ind in servers){
+            server = servers[ind];
             console.log("Beginning configure for server: " + server.SERVER_NAME);
             curr_guild = {};
             curr_guild.logbook = [];
@@ -520,6 +515,7 @@ async function configure(){
         configured = true;
         log("-----------BOT BEGINS-----------");
         log("Bot Configured successfully!");
+        console.log(guilds);
         print_server_config();        
     }
 }
