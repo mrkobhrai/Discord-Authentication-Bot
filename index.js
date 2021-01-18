@@ -80,9 +80,6 @@ admin.initializeApp({
  *  Initialise FIREBASE database reference pointers
  */
 const database = admin.database();
-const queue_ref = database.ref("/queue");
-const verified_users = database.ref("/users");
-const active_meetings = database.ref("active_meetings");
 
 /*
  *  Configured variable to ensure configuration worked correctly
@@ -354,10 +351,10 @@ async function on_queue(snapshot, prevChildKey){
  */
 function log(log){
     console.log(log);
-    logbook.push(new Date(Date.now()).toLocaleString() + ":" + log);
-    if(log_channel != null){
-        log_channel.send("`"+log+"`");
-    }
+    // logbook.push(new Date(Date.now()).toLocaleString() + ":" + log);
+    // if(log_channel != null){
+    //     log_channel.send("`"+log+"`");
+    // }
 }
 
 /*
@@ -517,6 +514,8 @@ async function configure(){
             //Errors will be sent to server
             console.log("Fetching committee role");
             curr_guild.committee_role = await get_role(server.COMMITTEE_ROLE_SAFE, curr_guild.guild).then((role)=>role).catch(log);
+            curr_guild.queue_ref = database.ref(server.SERVER_NAME + "/queue");
+            curr_guild.verified_users = database.ref(server.SERVER_NAME + "/users");
             guilds[server.SERVER_ID] = curr_guild;
         }
     } catch(error){
