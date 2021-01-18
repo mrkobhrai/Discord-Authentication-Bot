@@ -202,7 +202,8 @@ bot.on('message', message => {
 bot.on('message', message => {
     if(message.content === '!clear_log_chat' && message.member != null && message.member.hasPermission("ADMINISTRATOR") && configured){
         message.reply("Deleting logs!");
-        log_channel.messages.cache.forEach((message)=> message.delete());
+
+        guilds[message.guild.id].log_channel.messages.cache.forEach((message)=> message.delete());
     }
 });
 
