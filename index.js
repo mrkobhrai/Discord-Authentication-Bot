@@ -399,18 +399,18 @@ function print_commands(){
 async function notify_unverified_users(){
     var notifications = 0;
     if(configured){
-        log("Beginning: Notifiying Unverified Users");
         for(var guild_id in guilds){
-            guild = guilds[guild_id].guild;
-            guild.members.fetch().then((members)=>{
+            guilds[guild_id].guild.members.fetch().then((members)=>{
+                log("Beginning: Notifiying Unverified Users");
                 members.forEach((guildMember)=>{
-                    if(!guildMember.roles.cache.find( role => role.id === guild.roles.Verified)){
+                    if(!guildMember.roles.cache.find( role => role.id === guilds[guild_id].course_roles.Verified.id)){
                         send_user_auth_url(guildMember);
                         notifications++;
                     }
                 });
                 log(notifications + " users notified!");
                 log("Ending: Notifiying Unverified Users");
+                notifications = 0;
             });
         }
         
