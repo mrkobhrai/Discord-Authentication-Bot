@@ -155,10 +155,11 @@ bot.on('message', message => {
  */
 bot.on('message', message => {
     if(message.content === '!logs' && message.member != null && message.member.hasPermission("ADMINISTRATOR") && configured){
-        log_channel.send("-----BEGIN LOGBOOK-----");
-        log_channel.send("LOGS:" + logbook.length);
-        logbook.forEach((log) => log_channel.send("`"+log+"`"));
-        log_channel.send("-----END   LOGBOOK-----");
+        var logbook = guilds[message.guild.id].logbook
+        log("-----BEGIN LOGBOOK-----");
+        log("LOGS:" + logbook.length);
+        logbook.forEach((log) => log("`"+log+"`"));
+        log("-----END   LOGBOOK-----");
     }
 });
 
@@ -177,7 +178,7 @@ bot.on('message', message => {
             if(guildmember == null){
                 log("Trying to add member to committee but unknown member with userid: " + member.id);
             }else{
-                guildmember.roles.add(committee_role).catch((error)=>log("Tried adding member:" + user.id + "to committee but failed with error:" + error));
+                guildmember.roles.add(guilds[message.guild.id].committee_role).catch((error)=>log("Tried adding member:" + member.id + "to committee but failed with error:" + error));
                 log("Successfully added member " + member.username+ " to committee group :) by user with username:" + message.author.username);
                 
             }
@@ -211,7 +212,7 @@ bot.on('guildMemberAdd', member => {
     member.send("Welcome to the DoCSoc Discord Server!");
     log("New Member Joined:" + member.displayName);
     if(configured){
-        welcome_channel.send("Hello <@" + member.id + ">! I've sent you a link to verify your status as a DoCSoc Member!\nPlease check your DMs!");
+        guilds[member.guild.id].welcome_channel.send("Hello <@" + member.id + ">! I've sent you a link to verify your status as a DoCSoc Member!\nPlease check your DMs!");
     }
     send_user_auth_url(member);
 });
@@ -389,7 +390,6 @@ function print_commands(){
     log("!clear_log_chat (Clear the log chat from this runtimes logs)")
     log("!config (Prints the Server config)");
     log("!committee <user> (Gives a single user committee role, user @ to mention them as the argument!)");
-    log("!meeting [<user>] (Creates a meeting of users, gives a voice and text chat)");
 }
 
 /*
@@ -515,7 +515,6 @@ async function configure(){
         configured = true;
         log("-----------BOT BEGINS-----------");
         log("Bot Configured successfully!");
-        console.log(guilds);
         print_server_config();        
     }
 }
