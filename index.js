@@ -209,10 +209,11 @@ bot.on('message', message => {
 * When a member is added, log them joining and send them their custom auth url
 */
 bot.on('guildMemberAdd', member => {
-    member.send("Welcome to the DoCSoc Discord Server!");
+    curr_guild = guilds[member.guild.id];
+    member.send("Welcome to the "+ curr_guild.organisation +" Discord Server!");
     log("New Member Joined:" + member.displayName);
     if(configured){
-        guilds[member.guild.id].welcome_channel.send("Hello <@" + member.id + ">! I've sent you a link to verify your status as a DoCSoc Member!\nPlease check your DMs!");
+        guilds[member.guild.id].welcome_channel.send("Hello <@" + member.id + ">! I've sent you a link to verify your status as a "+ curr_guild.organisation + " Member!\nPlease check your DMs!");
     }
     send_user_auth_url(member);
 });
@@ -295,21 +296,18 @@ async function on_queue(snapshot, prevChildKey, guild_id){
                     }else{
                         log("Unidentified course :" + course + " when trying to add member" + db_user.name);
                     }
-
-                    if(Object.keys(servers[guild_id].years).includes(year)){
+                    if(Object.keys(guilds[guild_id].year_roles).includes(year)){
                         member.roles.add(curr_guild.year_roles[year]);
                     }else{
                         log("Unidentified year :" + year + " when trying to add member" + db_user.name);
                     }
 
-                    log("DoCSoc Member : "+ db_user.name +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id +" and course group: "+course+" and year: "+ year +"!");
+                    log("Member : "+ db_user.name +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id +" and course group: "+course+" and year: "+ year +"!");
                     var userid = member.toJSON().userID.toString();
                     curr_guild.verified_users.child(shortcode).set({"username": member.user.username, "name": db_user.name, "disc_id" : userid, "email": db_user.email, "course": course, "year": year});
-                    member.send("Well done! You've been verified as a member!");
-                    member.send("You are now free to explore the server and join in with DoCSoc Events!");
-                    member.send("Use the '!help' command in any channel to get a list of available commands");
+                    member.send(curr_guild.verified_msg);
                 }else{
-                    log("DoCSoc Member: " + db_user.name + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id);
+                    log("Member: " + db_user.name + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id);
                     member.send("This shortcode is already registered to a Discord User!");
                     member.send('If you believe this is an error, please contact an Admin');
                 }
@@ -425,9 +423,9 @@ async function notify_unverified_users(){
  */
 function send_user_auth_url(member){
     return;
-    member.send("Just one last step to get into the IC DoCSoc server :)")
-    member.send("To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:");
-    member.send("https://discord.docsoc.co.uk/"+ member.id);
+    var guild = guilds[member.guild.id];
+    member.send(guild.welcome_msg)
+    member.send(guild.auth_web_url+ member.id);
     member.send("This link will only work for your account! There is no point sharing it with other users");
     log("Sent custom URL to user: " + member.displayName + " for verification");
 }
@@ -471,6 +469,10 @@ async function configure(){
         for(var ind in servers){
             server = servers[ind];
             console.log("Beginning configure for server: " + server.SERVER_NAME);
+            curr_guild.welcome_msg = server.WELCOME_MESSAGE;
+            curr_guild.verified_msg = server.VERIFIED_MESSAGE;
+            curr_guild.auth_web_url = server.AUTH_WEBSITE_URL;
+            curr_guild.organisation = server.ORGANISATION;
             curr_guild = {};
             curr_guild.logbook = [];
             curr_guild.guild = bot.guilds.cache.get(server.SERVER_ID);
@@ -492,7 +494,7 @@ async function configure(){
                 curr_guild.year_roles[role] = await get_role(server.years[role], curr_guild.guild).then((role)=> role).catch(log);
             }
             //Left as console log to reduce initialisation spam
-            //Errors will be sent to server
+            //Errors will be sent to servercons
             console.log("Fetching committee role");
             curr_guild.committee_role = await get_role(server.COMMITTEE_ROLE_SAFE, curr_guild.guild).then((role)=>role).catch(log);
             curr_guild.queue_ref = database.ref(server.SERVER_NAME + "/queue");

@@ -19,6 +19,10 @@
         "PhD":"716013873836326933",
         "MSc":"744610122181116054"
     },
-    "COMMITTEE_ROLE_SAFE": "715964238480539679"
+    "COMMITTEE_ROLE_SAFE": "715964238480539679",
+    "WELCOME_MESSAGE": "Just one last step to get into the IC DoCSoc server :)\n To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:\n",
+    "AUTH_WEBSITE_URL":"https://discord.docsoc.co.uk/",
+    "VERIFIED_MESSAGE": "Well done! You've been verified as a member! You are now free to explore the server and join in with DoCSoc Events!\n Use the '!help' command in any channel to get a list of available commands",
+    "ORGANISATION": "DoCSoc"
 }
 ]
