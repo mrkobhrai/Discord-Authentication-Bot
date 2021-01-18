@@ -288,9 +288,9 @@ async function on_queue(snapshot, prevChildKey, guild_id){
                         await member.roles.set([]);
                     }
                     member.setNickname(db_user.name).catch((error)=>log("Can't set the nickname:" + db_user.name + " for this user(id):" + member.id + "->" + error));
-                    member.roles.add(curr_guild.course_roles["Verified"])
-                    if(Object.keys(servers[guild_id].roles).includes(course)){
-                        member.roles.add(course_roles[course]);
+                    member.roles.add(curr_guild.roles["Verified"])
+                    if(Object.keys(curr_guild.roles).includes(course)){
+                        member.roles.add(curr_guild.roles[course]);
                     }else{
                         log("Unidentified course :" + course + " when trying to add member" + db_user.name);
                     }
@@ -403,7 +403,7 @@ async function notify_unverified_users(){
             guilds[guild_id].guild.members.fetch().then((members)=>{
                 log("Beginning: Notifiying Unverified Users");
                 members.forEach((guildMember)=>{
-                    if(!guildMember.roles.cache.find( role => role.id === guilds[guild_id].course_roles.Verified.id)){
+                    if(!guildMember.roles.cache.find( role => role.id === guilds[guild_id].roles.Verified.id)){
                         send_user_auth_url(guildMember);
                         notifications++;
                     }
@@ -478,10 +478,10 @@ async function configure(){
             curr_guild.welcome_channel = get_channel(server.WELCOME_CHANNEL_ID, curr_guild.guild);
 
             //Populate roles
-            curr_guild.course_roles = {};
+            curr_guild.roles = {};
             for(var role in server.roles){
                 console.log("Fetching role: " + role);
-                curr_guild.course_roles[role] = await get_role(server.roles[role], curr_guild.guild).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
+                curr_guild.roles[role] = await get_role(server.roles[role], curr_guild.guild).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
             }
 
             curr_guild.year_roles = {};
