@@ -54,26 +54,8 @@ const admin = require("firebase-admin");
  */
 
 var guilds = {};
-// var guild;
-
-var course_roles = {};
-var year_roles = {};
-
-var committee_role;
-var meeting_category;
-
-var log_channel;
-var welcome_channel;
-var logbook = [];
 
 var email_transporter;
-
-/*
-* Stored meeting room variables
-* Loaded in locally as cache to reduce neccesity to access database
-*/
-var meeting_rooms = {};
-
 /*
  * Initialises Firebase API keys
  */
@@ -508,6 +490,7 @@ async function configure(){
         for(var server in servers){
             console.log("Beginning configure for server: " + server.SERVER_NAME);
             curr_guild = {};
+            curr_guild.logbook = [];
             curr_guild.guild = bot.guilds.cache.get(server.SERVER_ID);
             curr_guild.log_channel = get_channel(server.LOG_CHANNEL_ID, curr_guild.guild);
             curr_guild.welcome_channel = get_channel(server.WELCOME_CHANNEL_ID, curr_guild.guild);
@@ -534,6 +517,7 @@ async function configure(){
             //Errors will be sent to server
             console.log("Fetching committee role");
             curr_guild.committee_role = await get_role(server.COMMITTEE_ROLE_SAFE, curr_guild.guild).then((role)=>role).catch(log);
+            guilds[server.SERVER_ID] = curr_guild;
         }
     } catch(error){
         log("FATAL!!!");
