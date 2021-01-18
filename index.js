@@ -4,7 +4,7 @@
  */
 const Discord = require('discord.js');
 const nodemailer = require('nodemailer');
-const server = require('./disc_config.json')
+const servers = require('./disc_config.json')
 
 /*
  * Environment based imports
@@ -53,13 +53,15 @@ const admin = require("firebase-admin");
  * Log book is the current logs stored in the session, these are not stored in the database
  * The email transporter is the variable which stores the open SMTP channel for sending emails
  */
-var guild;
+
+var guilds = {};
+// var guild;
 
 var course_roles = {};
 var year_roles = {};
 
-var COMMITTEE_ROLE;
-var MEETING_CATEGORY;
+var committee_role;
+var meeting_category;
 
 var log_channel;
 var welcome_channel;
@@ -207,7 +209,7 @@ bot.on('message', message => {
             if(guildmember == null){
                 log("Trying to add member to committee but unknown member with userid: " + member.id);
             }else{
-                guildmember.roles.add(COMMITTEE_ROLE).catch((error)=>log("Tried adding member:" + user.id + "to committee but failed with error:" + error));
+                guildmember.roles.add(committee_role).catch((error)=>log("Tried adding member:" + user.id + "to committee but failed with error:" + error));
                 log("Successfully added member " + member.username+ " to committee group :) by user with username:" + message.author.username);
                 
             }
@@ -355,7 +357,7 @@ bot.on('voiceStateUpdate', function(oldState, newState){
         //Create voice channel
         voice_channel = await guild.channels.create(meeting_room_name, { 
             type : 'voice', 
-            parent : MEETING_CATEGORY,
+            parent : meeting_category,
             permissionOverwrites: [
                 // {
                 //     id: server.EVERYONE_ROLE_SAFE,
@@ -371,7 +373,7 @@ bot.on('voiceStateUpdate', function(oldState, newState){
         //Create text channel
         text_channel = await guild.channels.create(meeting_room_name, { 
             type : 'text', 
-            parent : MEETING_CATEGORY,
+            parent : meeting_category,
             permissionOverwrites: [
                 {
                     id: server.EVERYONE_ROLE_SAFE,
@@ -530,7 +532,7 @@ function log(log){
  * Gets a channel given an id 
  * Pre: configured
  */
-function get_channel(id){
+function get_channel(id, guild){
     return guild.channels.cache.get(id);
 }
 
@@ -674,31 +676,6 @@ async function get_shortcode(disc_id){
  */
 async function configure(){
     try{
-        guild = bot.guilds.cache.get(server.SERVER_ID);
-        log_channel = get_channel(server.LOG_CHANNEL_ID);
-        welcome_channel = get_channel(server.WELCOME_CHANNEL_ID);
-        MEETING_CATEGORY = get_channel(server.MEETING_ROOM_CATEGORY);
-        //Update meeting_rooms
-        await sync_meetings();
-        //Populate roles
-        for(var role in server.roles){
-            //Left as console log to reduce initialisation spam
-            //Errors will be sent to server
-            console.log("Fetching role: " + role);
-            course_roles[role] = await get_role(server.roles[role]).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
-        }
-
-        for(var role in server.years){
-            //Left as console log to reduce initialisation spam
-            //Errors will be sent to server
-            console.log("Fetching year role: " + role);
-            year_roles[role] = await get_role(server.years[role]).then((role)=> role).catch(log);
-        }
-        //Left as console log to reduce initialisation spam
-        //Errors will be sent to server
-        console.log("Fetching committee role");
-        COMMITTEE_ROLE = await get_role(server.COMMITTEE_ROLE_SAFE).then((role)=>role).catch(log);
-
         //Create email transporter object
         email_transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
@@ -709,7 +686,33 @@ async function configure(){
                 pass: email.pass
             }
         });
+        for(var server in servers){
+            curr_guild = {};
+            curr_guild.guild = bot.guilds.cache.get(server.SERVER_ID);
+            curr_guild.log_channel = get_channel(server.LOG_CHANNEL_ID, curr_guild.guild);
+            curr_guild.welcome_channel = get_channel(server.WELCOME_CHANNEL_ID, curr_guild.guild);
+            curr_guild.meeting_category = get_channel(server.MEETING_ROOM_CATEGORY, curr_guild.guild);
+            //Update meeting_rooms
+            await sync_meetings();
+            //Populate roles
+            curr_guild.course_roles = {};
+            for(var role in server.roles){
+                console.log("Fetching role: " + role);
+                curr_guild.course_roles[role] = await get_role(server.roles[role]).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
+            }
 
+            curr_guild.year_roles = {};
+            for(var role in server.years){
+                //Left as console log to reduce initialisation spam
+                //Errors will be sent to server
+                console.log("Fetching year role: " + role);
+                curr_guild.year_roles[role] = await get_role(server.years[role]).then((role)=> role).catch(log);
+            }
+            //Left as console log to reduce initialisation spam
+            //Errors will be sent to server
+            console.log("Fetching committee role");
+            curr_guild.committee_role = await get_role(server.COMMITTEE_ROLE_SAFE).then((role)=>role).catch(log);
+        }
     } catch(error){
         log("FATAL!!!");
         log("CONFIGURATION FAILED WITH ERROR:");
@@ -805,46 +808,3 @@ async function delete_room(meeting_room_name){
     delete meeting_rooms[meeting_room_name];
 }
 
-/**
- * Augment Functions
- */
-function year_up(){
-    guild.members.cache.forEach((member)=>{
-            member.send("New university year, new you :) For security reasons we ask that you reauthenticate your DoCSoc membership and update your details for the upcoming year!");
-            member.send("You will be unable to use the server normally until you update your details");
-            if(!member.user.bot){
-                member.roles.set([]);
-            }
-    });
-    verified_users.remove();       
-}
-
-const draw_name = "games_night_draw"
-const draw_channel = "775124717643235328"
-const enter_draw = database.ref("/" + draw_name);
-bot.on('message', async function(message){
-    if(message.channel.id=== draw_channel && message.content === '!enter' && message.member != null && configured && message.member.roles.cache.find( r=> r.id === server.roles.Verified)){
-        var shortcode = await get_shortcode(message.member.id);
-        if(shortcode.length <= 0){
-            return;
-        }
-        log("Shortcode: "+ shortcode + " entered into the draw");
-        enter_draw.child(shortcode[0]).set(true);
-        message.member.send("You've been added into the random draw with a chance of winning a deliveroo voucher!");
-        message.member.send("Please note you will only be added to the draw once :)");
-        message.delete();
-    }
-})
-
-bot.on('message', async function(message){
-    if(message.channel.id===draw_channel && message.content === '!withdraw' && message.member != null && configured && message.member.roles.cache.find( r=> r.id === server.roles.Verified )){
-        var shortcode = await get_shortcode(message.member.id);
-        if(shortcode.length <= 0){
-            return;
-        }
-        log("Shortcode: "+ shortcode + " withdrawn from the draw");
-        enter_draw.child(shortcode[0]).set(false);
-        message.member.send("You've been removed from the draw!")
-        message.delete();
-    }
-})
