@@ -285,156 +285,6 @@ bot.on('voiceStateUpdate', function(oldState, newState){
 })
 
 /*
-* This command creates a user meeting with a set of mentioned users
-* Meeting rooms can only be created by a verified user, but can include non-verified users
-* At the moment, meeting rooms must expire before you can make another one
-*/
-/*
- bot.on('message', async function(message){
-     //Check the command begins with !meeting and is done by a verified member, and configuration is complete
-    if(message.content.startsWith('!meeting') && message.member != null && message.member.roles.cache.find( r=> r.id === server.roles.Verified ) && configured){
-       //Check if user has active room
-       var has_room = false;
-       var room = null; 
-       for(var room_name in meeting_rooms){
-           if(meeting_rooms[room_name]["owner_id"] == message.author.id){
-               has_room = true;
-               room = room_name;
-           }
-       }
-
-       if(has_room){
-        meeting_room = meeting_rooms[room];
-        var role = await get_role(meeting_room.role);
-        message.mentions.users.forEach((member)=>{
-             if(!meeting_room.members.includes(member.id))
-             {
-                 get_member(member.id).roles.add(role);
-                 member.send("You've been added to " + room + " room by the user " + get_member(message.author.id).nickname);
-                 meeting_room.members.push(member.id);
-             }
-         });
-         meeting_rooms[room] = {
-             "voice": meeting_room.voice,
-             "chat": meeting_room.chat,
-             "members" : meeting_room.members,
-             "owner_id" : meeting_room.owner_id,
-             "owner_shortcode" : meeting_room.owner_shortcode,
-             "role" : meeting_room.role,
-             };
-        active_meetings.child(room).set(meeting_rooms[room]);
-        meeting_rooms[room]["timeout"] = meeting_room.timeout;
-        message.delete();
-        return;
-    }
-       
-       //Get the message senders shortcode.
-        var author_shortcode = (await get_shortcode(message.author.id))[0];
-        //Discord member ids
-        var member_ids = [];
-        //Add the author to the member lists
-        member_ids.push(message.author.id);
-        var has_name = false;
-        var meeting_room_name;
-        var base_name = message.member.nickname + "s_room_";
-        for(var i = 1; !has_name; i++){
-            if(!Object.keys(meeting_rooms).includes(base_name + i) || meeting_rooms[base_name + i] == false){
-                has_name = true;
-                meeting_room_name = base_name + i;
-                meeting_rooms[meeting_room_name] =  true;
-            }
-        }
-
-        var role;
-        var voice_channel;
-        var text_channel;
-        role = await guild.roles.create({
-            data: {
-                name : meeting_room_name
-            }
-        }).then((role)=>role).catch(log);
-
-        //Create voice channel
-        voice_channel = await guild.channels.create(meeting_room_name, { 
-            type : 'voice', 
-            parent : meeting_category,
-            permissionOverwrites: [
-                // {
-                //     id: server.EVERYONE_ROLE_SAFE,
-                //     deny: ['VIEW_CHANNEL']
-                // },
-                {
-                    id: role.id,
-                    allow: ['VIEW_CHANNEL']
-                }
-            ]
-        }).then((voice_channel)=>voice_channel).catch(log);
-
-        //Create text channel
-        text_channel = await guild.channels.create(meeting_room_name, { 
-            type : 'text', 
-            parent : meeting_category,
-            permissionOverwrites: [
-                {
-                    id: server.EVERYONE_ROLE_SAFE,
-                    deny: ['VIEW_CHANNEL']
-                },
-                {
-                    id: role.id,
-                    allow: ['VIEW_CHANNEL']
-                }
-            ]
-        }).then((text_channel)=>text_channel).catch(log);
-        text_channel.send("Meeting Channel");
-        text_channel.send("_A copy of this chat will be sent to each member once the meeting ends_");
-        text_channel.send("_The meeting will end after "+server.MEETING_TIMEOUT_TIME+" seconds of inactivity in the voice channel_");
-        get_member(message.author.id).roles.add(role);
-
-        message.mentions.users.forEach((member)=>{
-            if(!member_ids.includes(member.id))
-            {
-                get_member(member.id).roles.add(role);
-                member.send("You've been added to " + meeting_room_name + " room by the user " + get_member(message.author.id).nickname);
-                member_ids.push(member.id);
-            }
-        });
-
-        //Create dictionary object
-        var meeting_object = {
-        "voice": voice_channel.id,
-        "chat" : text_channel.id ,
-        "members" : member_ids,
-        "owner_id" : message.author.id,
-        "owner_shortcode" : author_shortcode,
-        "role" : role.id
-        }
-        //Log meeting creation
-        log("Created meeting with attributes:\n" +  
-        "voice: " + voice_channel.id + "\n" +
-        "chat: " + text_channel.id  + "\n" +
-        "members: " + member_ids  + "\n" +
-        "owner_id: " + message.author.id  + "\n" + 
-        "owner_shortcode: " + author_shortcode  + "\n" +
-        "role: " + role.id);
-        //Update database
-        active_meetings.child(meeting_room_name).set(meeting_object);
-        
-        meeting_object["timeout"] = setTimeout(function(){
-            delete_room(meeting_room_name);
-        }, server.MEETING_TIMEOUT_TIME * 1000);
-
-        //Update cache
-        meeting_rooms[meeting_room_name] = meeting_object;
-        
-        message.author.send("================================================");
-        message.author.send("Created a meeting for you with name " + meeting_room_name);
-        message.author.send("This meeting room will self-destruct in the event of " + (server.MEETING_TIMEOUT_TIME) + " seconds of inactivity");
-        message.author.send("================================================");
-        message.delete();
-    }
-});
-*/
-/*
  * ==================================================
  *                DATABASE LISTENERS
  * ==================================================
@@ -540,7 +390,7 @@ function get_channel(id, guild){
  * Gets a role given an id 
  * Pre: configured
  */
-async function get_role(role_id){
+async function get_role(role_id, guild){
     var result = await guild.roles.fetch(role_id).then(role=>role);
     return result;
 } 
@@ -583,40 +433,6 @@ function print_commands(){
 }
 
 /*
- * Load meeting_rooms in via the database
- * This function exists in case the bot restarts during a meeting  
- */
-/*
-async function sync_meetings(){
-    log("Beginning sync of active meeting rooms");
-    var fetched_rooms = (await active_meetings.once('value'));
-    if(fetched_rooms.exists()){
-        fetched_rooms = fetched_rooms.val();
-        log("Found room:" + fetched_rooms);
-        for(var room_name in fetched_rooms){
-            //Add rooms to fetched_rooms
-            var room = fetched_rooms[room_name];
-            
-            var voice_channel = get_channel(room.voice);
-
-            if(voice_channel == null){
-                return;
-            }
-
-            meeting_rooms[room_name] = room;
-            if(voice_channel.members.size == 0){
-                meeting_rooms[room_name]["timeout"] = setTimeout(function(){
-                    delete_room(room_name);
-                }, server.MEETING_TIMEOUT_TIME * 1000);
-                var owner = get_member(room.owner_id);
-                owner.send("Your meeting room " + room_name + " will delete in " + server.MEETING_TIMEOUT_TIME + " seconds unless the voice chat becomes active in this time period");
-            }   
-        }
-    }
-}
-*/
-
-/*
  * This function iterates through all unverified users and sends them their custom
  * authentication URL
  */
@@ -645,6 +461,7 @@ async function notify_unverified_users(){
  * Given a member object, sends the member their custom auth url
  */
 function send_user_auth_url(member){
+    return;
     member.send("Just one last step to get into the IC DoCSoc server :)")
     member.send("To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:");
     member.send("https://discord.docsoc.co.uk/"+ member.id);
@@ -689,11 +506,12 @@ async function configure(){
             }
         });
         for(var server in servers){
+            console.log("Beginning configure for server: " + server.SERVER_NAME);
             curr_guild = {};
             curr_guild.guild = bot.guilds.cache.get(server.SERVER_ID);
             curr_guild.log_channel = get_channel(server.LOG_CHANNEL_ID, curr_guild.guild);
             curr_guild.welcome_channel = get_channel(server.WELCOME_CHANNEL_ID, curr_guild.guild);
-            
+
             // curr_guild.meeting_category = get_channel(server.MEETING_ROOM_CATEGORY, curr_guild.guild);
             //Update meeting_rooms
             // await sync_meetings();
@@ -702,7 +520,7 @@ async function configure(){
             curr_guild.course_roles = {};
             for(var role in server.roles){
                 console.log("Fetching role: " + role);
-                curr_guild.course_roles[role] = await get_role(server.roles[role]).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
+                curr_guild.course_roles[role] = await get_role(server.roles[role], curr_guild.guild).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
             }
 
             curr_guild.year_roles = {};
@@ -710,12 +528,12 @@ async function configure(){
                 //Left as console log to reduce initialisation spam
                 //Errors will be sent to server
                 console.log("Fetching year role: " + role);
-                curr_guild.year_roles[role] = await get_role(server.years[role]).then((role)=> role).catch(log);
+                curr_guild.year_roles[role] = await get_role(server.years[role], curr_guild.guild).then((role)=> role).catch(log);
             }
             //Left as console log to reduce initialisation spam
             //Errors will be sent to server
             console.log("Fetching committee role");
-            curr_guild.committee_role = await get_role(server.COMMITTEE_ROLE_SAFE).then((role)=>role).catch(log);
+            curr_guild.committee_role = await get_role(server.COMMITTEE_ROLE_SAFE, curr_guild.guild).then((role)=>role).catch(log);
         }
     } catch(error){
         log("FATAL!!!");
@@ -728,88 +546,3 @@ async function configure(){
         print_server_config();        
     }
 }
-
-/*
-* Delete a meeting room, associated chats and roles given it's ID
-* Then sends emails to all the members of the chat containing the meeting room chat history
-*/
-/*
-async function delete_room(meeting_room_name){
-    if(meeting_rooms[meeting_room_name] == null){
-        log("Attempted to delete meeting room with voice channel name" + meeting_room_name + " however it failed because that doesn't exist inside the cache");
-        return;
-    }
-
-    var meeting_room = meeting_rooms[meeting_room_name];
-    var voice_channel = get_channel(meeting_room["voice"]);
-    var text_channel = get_channel(meeting_room["chat"]);
-    var role = await get_role(meeting_room["role"]);
-
-    //Delete role
-    await role.delete().catch(log);
-    //Fetch all messages and print to log
-    email_body  = "<h1>" + meeting_room_name + " chat log - DoCSoc Discord</h1>";
-    email_body += "<p><i> Please note this email does not necessarily represent the views of Imperial College London, the Department of Computing at Imperial College London or the Department of Computing Society or it's committee </i></p>";
-    email_body += "<p>Meeting : " + voice_channel.createdAt  + " - " + new Date(Date.now()).toLocaleString() + "</p>";
-    email_body += "<h3>Meeting Chat Log for " + meeting_room_name + "</h3>";
-    email_body += "<div style=\"background-color : black; color: white; padding: 10px;\">"
-    //Messages
-    msgs = ""
-    await text_channel.messages.fetch().then(messages => (messages.forEach(message=>{
-        //Current message
-        msg = "";
-        var name;
-        var author = get_member(message.author.id)
-        if(author.nickname == null){
-            name = "(Unverified)" + author.user.username;
-        }else{
-            name = author.nickname;
-        }
-        msg += name;
-        msg += ":"; 
-        msg += message.content;
-        message.attachments.forEach(attachment=>{
-            msg += "{Attachment URL}\n" + "<a href=\""+attachment.attachment+ "\">" +attachment.name + "</a>\n{/Attachment URL}\n";
-        });
-        //Added in reverse because message fetching is in reverse
-        msgs = "<p>" + msg + "</p>" + msgs;
-    })));
-    email_body += msgs;
-
-    var mailOptions = {
-        from: email.user,
-        to: "",
-        subject: "Discord Meeting Room: " + meeting_room_name + " - " + voice_channel.createdAt,
-        html: email_body
-    };
-    
-    meeting_room.members.forEach((member_id)=>{
-        get_shortcode(member_id).then((shortcodes)=>{
-            if(shortcodes.length > 0){
-                mailOptions.to = shortcodes[0] + "@ic.ac.uk";
-                email_transporter.sendMail(mailOptions, function(error, info){
-                    if (error) {
-                      log("Email error");
-                      log(error);
-                    } else {
-                      log('Email sent: ' + info.response);
-                      log("Sent to: "+ mailOptions.to); 
-                    }
-                });
-            }
-        })
-    })
-    //Delete channels
-    voice_channel.setName("DELETED");
-    text_channel.setName("DELETED");
-    await voice_channel.delete().catch(log);
-    await text_channel.delete().catch(log);
-    
-    log("Deleted meeting room with name: " + meeting_room_name + " due to timeout");
-    get_member(meeting_room["owner_id"]).send("MEETING ENDING:\nYour meeting room "  + meeting_room_name + " has expired due to " + server.MEETING_TIMEOUT_TIME + " seconds of inactivity in the voice chat");
-    
-    //Deleting
-    active_meetings.child(meeting_room_name).remove();
-    delete meeting_rooms[meeting_room_name];
-}
-*/
