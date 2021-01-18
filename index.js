@@ -269,18 +269,8 @@ bot.on('voiceStateUpdate', function(oldState, newState){
  * ==================================================
  */
 
-/*
- * Database event listener. Interestingly, listener takes all backlog from when the bot was offline
- * Takes queued authentication and attempts to verify user members associated with each account
- */
-queue_ref.on("child_added", async function(snapshot,prevChildKey){
-    if(!configured){
-        await configure()
-    }
-    on_queue(snapshot,prevChildKey)
-});
-
-async function on_queue(snapshot, prevChildKey){
+async function on_queue(snapshot, prevChildKey, guild_id){
+    curr_guild = guilds[guild_id];
     if(!configured){
         log("Not configured, can't deal with queue!");
         return;
@@ -289,17 +279,17 @@ async function on_queue(snapshot, prevChildKey){
     var member = await get_member_uncached(db_user.id);
     if(member == null){
         log("User not found through login with shortcode:" + db_user.name + ". Discord ID attempted:" + db_user.id);
-        queue_ref.child(snapshot.key).remove();
+        curr_guild.queue_ref.child(snapshot.key).remove();
     }else{
         var shortcode = db_user.shortcode;
         var course = db_user.course;
         var year = db_user.year;
-        verified_users.child(shortcode).once('value', async function(fetched_snapshot){
+        curr_guild.verified_users.child(shortcode).once('value', async function(fetched_snapshot){
             var alternate_shortcode = await get_shortcode(db_user.id).then(async function(alternate_shortcode){
                 if((alternate_shortcode[0] || shortcode) != shortcode){
                     member.send("IMPORTANT:You're already verified under "+alternate_shortcode[0]+"! Someone just tried to reverify this account! \n\nDid you send someone your authentication link or try and reuse it yourself! This account is already registered to a shortcode. If you wish to update any information e.g. course or year, please contact an admin");
                     log("Member already verified with discord id " + member.id + " and member with shortcode: " + shortcode + " attempted to reverify this account. This is not allowed!");
-                    queue_ref.child(snapshot.key).remove();
+                    curr_guild.queue_ref.child(snapshot.key).remove();
                     return;
                 }
                 else if(fetched_snapshot.val() === null || fetched_snapshot.val().disc_id === db_user.id){
@@ -308,31 +298,31 @@ async function on_queue(snapshot, prevChildKey){
                         await member.roles.set([]);
                     }
                     member.setNickname(db_user.name).catch((error)=>log("Can't set the nickname:" + db_user.name + " for this user(id):" + member.id + "->" + error));
-                    member.roles.add(course_roles["Verified"])
-                    if(Object.keys(server.roles).includes(course)){
+                    member.roles.add(curr_guild.course_roles["Verified"])
+                    if(Object.keys(servers[guild_id].roles).includes(course)){
                         member.roles.add(course_roles[course]);
                     }else{
                         log("Unidentified course :" + course + " when trying to add member" + db_user.name);
                     }
 
-                    if(Object.keys(server.years).includes(year)){
-                        member.roles.add(year_roles[year]);
+                    if(Object.keys(servers[guild_id].years).includes(year)){
+                        member.roles.add(curr_guild.year_roles[year]);
                     }else{
                         log("Unidentified year :" + year + " when trying to add member" + db_user.name);
                     }
 
                     log("DoCSoc Member : "+ db_user.name +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id +" and course group: "+course+" and year: "+ year +"!");
                     var userid = member.toJSON().userID.toString();
-                    verified_users.child(shortcode).set({"username": member.user.username, "name": db_user.name, "disc_id" : userid, "email": db_user.email, "course": course, "year": year});
+                    curr_guild.verified_users.child(shortcode).set({"username": member.user.username, "name": db_user.name, "disc_id" : userid, "email": db_user.email, "course": course, "year": year});
                     member.send("Well done! You've been verified as a member!");
                     member.send("You are now free to explore the server and join in with DoCSoc Events!");
                     member.send("Use the '!help' command in any channel to get a list of available commands");
                 }else{
-                    log("DocSoc Member: " + db_user.name + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id);
+                    log("DoCSoc Member: " + db_user.name + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id);
                     member.send("This shortcode is already registered to a Discord User!");
                     member.send('If you believe this is an error, please contact an Admin');
                 }
-                queue_ref.child(snapshot.key).remove();
+                curr_guild.queue_ref.child(snapshot.key).remove();
             })
         })
     }
@@ -512,6 +502,14 @@ async function configure(){
             curr_guild.committee_role = await get_role(server.COMMITTEE_ROLE_SAFE, curr_guild.guild).then((role)=>role).catch(log);
             curr_guild.queue_ref = database.ref(server.SERVER_NAME + "/queue");
             curr_guild.verified_users = database.ref(server.SERVER_NAME + "/users");
+
+            curr_guild.queue_ref.on("child_added", async function(snapshot,prevChildKey){
+                if(!configured){
+                    await configure();
+                }
+                on_queue(snapshot,prevChildKey, server.SERVER_ID)
+            });
+
             guilds[server.SERVER_ID] = curr_guild;
         }
     } catch(error){
