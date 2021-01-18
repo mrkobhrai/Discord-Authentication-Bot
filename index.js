@@ -213,17 +213,24 @@ async function on_queue(snapshot, prevChildKey){
                         //Reset member roles
                         await member.roles.set([]);
                     }
-                    member.setNickname(db_user.name).catch((error)=>log("Can't set the nickname:" + db_user.name + " for this user(id):" + member.id + "->" + error));
                     member.roles.add(verified_role)
-
-                    log("DoCSoc Member : "+ db_user.name +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id);
+                    if(db_user.name != null){
+                        member.setNickname(db_user.name).catch((error)=>log("Can't set the nickname:" + db_user.name + " for this user(id):" + member.id + "->" + error));
+                        log("DoCSoc Member : "+ db_user.name +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id);    
+                    } else {
+                        log ("Non-DoCSoc Member with username " + member.user.username + "verified");
+                    }
                     var userid = member.toJSON().userID.toString();
-                    verified_users.child(shortcode).set({"username": member.user.username, "name": db_user.name, "disc_id" : userid});
+                    verified_users.child(shortcode).set({"username": member.user.username, "disc_id" : userid});
                     member.send("Well done! You've been verified as a member!");
                     member.send("You are now free to explore the server and join in with DoCSoc Events!");
                     member.send("Use the '!help' command in any channel to get a list of available commands");
                 }else{
-                    log("DocSoc Member: " + db_user.name + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id);
+                    if(db_user.name){
+                        log("DoCSoc Member: " + db_user.name + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id);
+                    } else {
+                        log("Non-DoCSoc Member: " + member.user.username + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id);
+                    }
                     member.send("This shortcode is already registered to a Discord User!");
                     member.send('If you believe this is an error, please contact an Admin');
                 }
