@@ -492,10 +492,6 @@ async function configure(){
             curr_guild.log_channel = get_channel(server.LOG_CHANNEL_ID, curr_guild.guild);
             curr_guild.welcome_channel = get_channel(server.WELCOME_CHANNEL_ID, curr_guild.guild);
 
-            // curr_guild.meeting_category = get_channel(server.MEETING_ROOM_CATEGORY, curr_guild.guild);
-            //Update meeting_rooms
-            // await sync_meetings();
-
             //Populate roles
             curr_guild.course_roles = {};
             for(var role in server.roles){
