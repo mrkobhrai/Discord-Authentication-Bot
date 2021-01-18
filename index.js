@@ -285,7 +285,7 @@ async function on_queue(snapshot, prevChildKey, guild_id){
         var course = db_user.course;
         var year = db_user.year;
         curr_guild.verified_users.child(shortcode).once('value', async function(fetched_snapshot){
-            var alternate_shortcode = await get_shortcode(db_user.id).then(async function(alternate_shortcode){
+            await get_shortcode(db_user.id, curr_guild.verified_users).then(async function(alternate_shortcode){
                 if((alternate_shortcode[0] || shortcode) != shortcode){
                     member.send("IMPORTANT:You're already verified under "+alternate_shortcode[0]+"! Someone just tried to reverify this account! \n\nDid you send someone your authentication link or try and reuse it yourself! This account is already registered to a shortcode. If you wish to update any information e.g. course or year, please contact an admin");
                     log("Member already verified with discord id " + member.id + " and member with shortcode: " + shortcode + " attempted to reverify this account. This is not allowed!");
@@ -441,7 +441,7 @@ function send_user_auth_url(member){
 /*
 * Fetch user shortcode from userid
 */
-async function get_shortcode(disc_id){
+async function get_shortcode(disc_id, verified_users){
     var result = [];
     await verified_users.orderByChild("disc_id").equalTo(disc_id).once('value').then(
         function(super_snap){
