@@ -131,7 +131,7 @@ bot.on('message', message => {
 bot.on('message', message => {
     if(message.content.startsWith('!kick') && message.member != null && message.member.hasPermission("ADMINISTRATOR")){
         message.mentions.users.forEach(function(user){
-            var guildmember = get_member(user.id);
+            var guildmember = get_member(user.id, message.guild);
             if(guildmember != null){
                 guildmember.kick();
                 log("Kicked member:" + guildmember.nickname + " with discord id:" + guildmember.id);
@@ -183,7 +183,7 @@ bot.on('message', message => {
             return;
         }
         message.mentions.users.forEach(function(member){
-            var guildmember = get_member(member.id);
+            var guildmember = get_member(member.id, message.guild);
             if(guildmember == null){
                 log("Trying to add member to committee but unknown member with userid: " + member.id);
             }else{
@@ -202,7 +202,6 @@ bot.on('message', message => {
 bot.on('message', message => {
     if(message.content === '!clear_log_chat' && message.member != null && message.member.hasPermission("ADMINISTRATOR") && configured){
         message.reply("Deleting logs!");
-
         guilds[message.guild.id].log_channel.messages.cache.forEach((message)=> message.delete());
     }
 });
@@ -248,8 +247,8 @@ bot.on('voiceStateUpdate', function(oldState, newState){
             var name = oldState.channel.name;
             if(oldState.channel.members.size == 0){
                 var meeting_room = meeting_rooms[name];
-                get_channel(meeting_room.chat).send("There is no one in the voice chat, this means the meeting will end in " + server.MEETING_TIMEOUT_TIME + " seconds");
-                get_member(meeting_room["owner_id"]).send("Your meeting room "  + name + " will delete in " + server.MEETING_TIMEOUT_TIME + " seconds unless the voice chat becomes active in this time period. You have been emailed a copy of the meeting chat");
+                get_channel(meeting_room.chat, oldState.guild).send("There is no one in the voice chat, this means the meeting will end in " + server.MEETING_TIMEOUT_TIME + " seconds");
+                get_member(meeting_room["owner_id"], oldState.guild).send("Your meeting room "  + name + " will delete in " + server.MEETING_TIMEOUT_TIME + " seconds unless the voice chat becomes active in this time period. You have been emailed a copy of the meeting chat");
                 meeting_rooms[name]["timeout"] = setTimeout(function(){
                     delete_room(oldState.channel.name);
                 }, server.MEETING_TIMEOUT_TIME * 1000);
@@ -277,7 +276,7 @@ async function on_queue(snapshot, prevChildKey, guild_id){
         return;
     }
     db_user = snapshot.val();
-    var member = await get_member_uncached(db_user.id);
+    var member = await get_member_uncached(db_user.id, curr_guild.guild);
     if(member == null){
         log("User not found through login with shortcode:" + db_user.name + ". Discord ID attempted:" + db_user.id);
         curr_guild.queue_ref.child(snapshot.key).remove();
@@ -369,14 +368,14 @@ async function get_role(role_id, guild){
  * Gets a member given an id 
  * Pre: configured
  */
-function get_member(id){
+function get_member(id, guild){
     return guild.member(id);
 }
 
 /* 
  * Gets a member given an id (not cached)
  */
-async function get_member_uncached(id){
+async function get_member_uncached(id, guild){
     return await guild.members.fetch(id);
 }
 
