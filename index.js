@@ -41,18 +41,6 @@ const database_uri = {
 const bot  = new Discord.Client();
 const admin = require("firebase-admin");
 
-/*
- * Part of the configuration variables
- * Guild is the Discord Server
- * Course roles stores all the roles related to courses and the 'Verified' role
- * Year roles store all roles related to years e.g. 1st, 2nd..
- * Committee role is kept seperate so has to be accessed directly
- * Log channel is the channel where all of this bot logs are sent
- * Welcome channel is the channel where it is announced when a new user joins
- * Log book is the current logs stored in the session, these are not stored in the database
- * The email transporter is the variable which stores the open SMTP channel for sending emails
- */
-
 var guilds = {};
 
 var email_transporter;
@@ -97,11 +85,11 @@ var configured = false;
  * notify admins on 'log' channnel
  */
 bot.on('ready', () => {
-    log("Attempting to run bot!");
+    console.log("Attempting to run bot!");
     configure().then(function(){
-        log("Bot running!");
+        console.log("Bot running!");
         setTimeout(function(){notify_unverified_users()}, 2000);
-    }).catch(log);
+    }).catch(console.log);
 });
 
 /*
@@ -124,9 +112,9 @@ bot.on('message', message => {
             var guildmember = get_member(user.id, message.guild);
             if(guildmember != null){
                 guildmember.kick();
-                log("Kicked member:" + guildmember.nickname + " with discord id:" + guildmember.id);
+                log("Kicked member:" + guildmember.nickname + " with discord id:" + guildmember.id, message.guild.id);
             }else{
-                log("No member found with id:" + user.id);
+                log("No member found with id:" + user.id, message.guild.id);
             }
         });
     }
@@ -156,10 +144,10 @@ bot.on('message', message => {
 bot.on('message', message => {
     if(message.content === '!logs' && message.member != null && message.member.hasPermission("ADMINISTRATOR") && configured){
         var logbook = guilds[message.guild.id].logbook
-        log("-----BEGIN LOGBOOK-----");
-        log("LOGS:" + logbook.length);
-        logbook.forEach((log) => log("`"+log+"`"));
-        log("-----END   LOGBOOK-----");
+        log("-----BEGIN LOGBOOK-----", message.guild.id);
+        log("LOGS:" + logbook.length, message.guild.id);
+        logbook.forEach((log) => log("`"+log+"`", , message.guild.id));
+        log("-----END   LOGBOOK-----", , message.guild.id);
     }
 });
 
@@ -169,17 +157,17 @@ bot.on('message', message => {
 bot.on('message', message => {
     if(message.content.startsWith('!committee') && message.member != null && message.member.hasPermission("ADMINISTRATOR") && configured){
         if(message.mentions.users.size > 1){
-            log("Can only add one user at a time to committee for security reasons :)");
+            log("Can only add one user at a time to committee for security reasons :)", message.guild.id);
             message.delete();
             return;
         }
         message.mentions.users.forEach(function(member){
             var guildmember = get_member(member.id, message.guild);
             if(guildmember == null){
-                log("Trying to add member to committee but unknown member with userid: " + member.id);
+                log("Trying to add member to committee but unknown member with userid: " + member.id, , message.guild.id);
             }else{
                 guildmember.roles.add(guilds[message.guild.id].committee_role).catch((error)=>log("Tried adding member:" + member.id + "to committee but failed with error:" + error));
-                log("Successfully added member " + member.username+ " to committee group :) by user with username:" + message.author.username);
+                log("Successfully added member " + member.username+ " to committee group :) by user with username:" + message.author.username, , message.guild.id);
                 
             }
         });
@@ -211,7 +199,7 @@ bot.on('message', message => {
 bot.on('guildMemberAdd', member => {
     curr_guild = guilds[member.guild.id];
     member.send("Welcome to the "+ curr_guild.organisation +" Discord Server!");
-    log("New Member Joined:" + member.displayName);
+    log("New Member Joined:" + member.displayName, member.guild.id);
     if(configured){
         guilds[member.guild.id].welcome_channel.send("Hello <@" + member.id + ">! I've sent you a link to verify your status as a "+ curr_guild.organisation + " Member!\nPlease check your DMs!");
     }
@@ -264,23 +252,23 @@ bot.on('voiceStateUpdate', function(oldState, newState){
 async function on_queue(snapshot, prevChildKey, guild_id){
     curr_guild = guilds[guild_id];
     if(!configured){
-        log("Not configured, can't deal with queue!");
+        console.log("Not configured, can't deal with queue!");
         return;
     }
     db_user = snapshot.val();
     var member = await get_member_uncached(db_user.id, curr_guild.guild);
     if(member == null){
-        log("User not found through login with shortcode:" + db_user.name + ". Discord ID attempted:" + db_user.id);
+        log("User not found through login with shortcode:" + db_user.name + ". Discord ID attempted:" + db_user.id, guild_id);
         curr_guild.queue_ref.child(snapshot.key).remove();
     }else{
         var shortcode = db_user.shortcode;
         var course = db_user.course;
         var year = db_user.year;
         curr_guild.verified_users.child(shortcode).once('value', async function(fetched_snapshot){
-            await get_shortcode(db_user.id, curr_guild.verified_users).then(async function(alternate_shortcode){
+            await get_shortcode(db_user.id, curr_guild).then(async function(alternate_shortcode){
                 if((alternate_shortcode[0] || shortcode) != shortcode){
                     member.send("IMPORTANT:You're already verified under "+alternate_shortcode[0]+"! Someone just tried to reverify this account! \n\nDid you send someone your authentication link or try and reuse it yourself! This account is already registered to a shortcode. If you wish to update any information e.g. course or year, please contact an admin");
-                    log("Member already verified with discord id " + member.id + " and member with shortcode: " + shortcode + " attempted to reverify this account. This is not allowed!");
+                    log("Member already verified with discord id " + member.id + " and member with shortcode: " + shortcode + " attempted to reverify this account. This is not allowed!", guild_id);
                     curr_guild.queue_ref.child(snapshot.key).remove();
                     return;
                 }
@@ -289,25 +277,25 @@ async function on_queue(snapshot, prevChildKey, guild_id){
                         //Reset member roles
                         await member.roles.set([]);
                     }
-                    member.setNickname(db_user.name).catch((error)=>log("Can't set the nickname:" + db_user.name + " for this user(id):" + member.id + "->" + error));
+                    member.setNickname(db_user.name).catch((error)=>log("Can't set the nickname:" + db_user.name + " for this user(id):" + member.id + "->" + error, guild_id));
                     member.roles.add(curr_guild.roles["Verified"])
                     if(Object.keys(curr_guild.roles).includes(course)){
                         member.roles.add(curr_guild.roles[course]);
                     }else{
-                        log("Unidentified course :" + course + " when trying to add member" + db_user.name);
+                        log("Unidentified course :" + course + " when trying to add member" + db_user.name, guild_id);
                     }
                     if(Object.keys(guilds[guild_id].year_roles).includes(year)){
                         member.roles.add(curr_guild.year_roles[year]);
                     }else{
-                        log("Unidentified year :" + year + " when trying to add member" + db_user.name);
+                        log("Unidentified year :" + year + " when trying to add member" + db_user.name, guild_id);
                     }
 
-                    log("Member : "+ db_user.name +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id +" and course group: "+course+" and year: "+ year +"!");
+                    log("Member : "+ db_user.name +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id +" and course group: "+course+" and year: "+ year +"!", guild_id);
                     var userid = member.toJSON().userID.toString();
                     curr_guild.verified_users.child(shortcode).set({"username": member.user.username, "name": db_user.name, "disc_id" : userid, "email": db_user.email, "course": course, "year": year});
                     member.send(curr_guild.verified_msg);
                 }else{
-                    log("Member: " + db_user.name + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id);
+                    log("Member: " + db_user.name + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id, guild_id);
                     member.send("This shortcode is already registered to a Discord User!");
                     member.send('If you believe this is an error, please contact an Admin');
                 }
@@ -324,16 +312,18 @@ async function on_queue(snapshot, prevChildKey, guild_id){
  * ==================================================
  */
 
- 
 /*
  * Logs to both console and to discord log channel if it exists
  */
-function log(log){
+function log(log, guild_id){
     console.log(log);
-    // logbook.push(new Date(Date.now()).toLocaleString() + ":" + log);
-    // if(log_channel != null){
-    //     log_channel.send("`"+log+"`");
-    // }
+    var curr_guild = guilds[guild_id];
+    if(curr_guild != null){
+        logbook = curr_guild.logbook;
+        log_channel = curr_guild.log_channel;
+        logbook.push(new Date(Date.now()).toLocaleString() + ":" + log);
+        log_channel.send("`"+log+"`");
+    }
 }
 
 /*
@@ -371,23 +361,16 @@ async function get_member_uncached(id, guild){
 /*
  * Prints the server configuration
  */
-function print_server_config(){
-    return;
-    log("Server Config:\n-> SERVER: " + guild.toString() + "\n-> LOG CHANNEL: " + log_channel.name + "\n-> Meeting Timeout Time(s):" + server.MEETING_TIMEOUT_TIME);    
+function print_server_config(guild_id){
+    log("Server Config:\n-> SERVER: " + guilds[guild_id].toString(), guild_id);    
 }
 
 /*
  * Prints the commands 
  */
-function print_commands(){
-    log("-----------COMMANDS-------------");
-    log("!help (Shows commands)");
-    log("!notify_unverified (Sends URL's to all unverified users)");
-    log("!kick [<user>] (Kicks mentioned users)")
-    log("!logs (View all logs!)")
-    log("!clear_log_chat (Clear the log chat from this runtimes logs)")
-    log("!config (Prints the Server config)");
-    log("!committee <user> (Gives a single user committee role, user @ to mention them as the argument!)");
+function print_commands(guild_id){
+    log("-----------COMMANDS-------------\n !help (Shows commands)\n !notify_unverified (Sends URL's to all unverified users)\n !kick [<user>] (Kicks mentioned users\n !logs (View all logs!)\n !clear_log_chat (Clear the log chat from this runtimes logs)\n !config (Prints the Server config)\n !committee <user> (Gives a single user committee role, user @ to mention them as the argument!)",
+    guild_id);
 }
 
 /*
@@ -399,21 +382,20 @@ async function notify_unverified_users(){
     if(configured){
         for(var guild_id in guilds){
             guilds[guild_id].guild.members.fetch().then((members)=>{
-                log("Beginning: Notifiying Unverified Users");
+                log("Beginning: Notifiying Unverified Users", guild_id);
                 members.forEach((guildMember)=>{
                     if(!guildMember.roles.cache.find( role => role.id === guilds[guild_id].roles.Verified.id)){
                         send_user_auth_url(guildMember);
                         notifications++;
                     }
                 });
-                log(notifications + " users notified!");
-                log("Ending: Notifiying Unverified Users");
+                log(notifications + " users notified!\n Ending: Notifiying Unverified Users", guild_id);
                 notifications = 0;
             });
         }
         
     }else{
-        log("Can't send verification stuff, configuration not set!");
+        console.log("Can't send verification stuff, configuration not set!");
     }
 }
 
@@ -422,20 +404,19 @@ async function notify_unverified_users(){
  * Given a member object, sends the member their custom auth url
  */
 function send_user_auth_url(member){
-    return;
     var guild = guilds[member.guild.id];
     member.send(guild.welcome_msg)
     member.send(guild.auth_web_url+ member.id);
     member.send("This link will only work for your account! There is no point sharing it with other users");
-    log("Sent custom URL to user: " + member.displayName + " for verification");
+    log("Sent custom URL to user: " + member.displayName + " for verification", member.guild.id);
 }
 
 /*
 * Fetch user shortcode from userid
 */
-async function get_shortcode(disc_id, verified_users){
+async function get_shortcode(disc_id, guild){
     var result = [];
-    await verified_users.orderByChild("disc_id").equalTo(disc_id).once('value').then(
+    await guild.verified_users.orderByChild("disc_id").equalTo(disc_id).once('value').then(
         function(super_snap){
             if(super_snap.exists()){
                 //Accounting for issue that may be multiply shortcodes associated to discord id
@@ -444,8 +425,7 @@ async function get_shortcode(disc_id, verified_users){
             }
         }
     ).catch(function(error){
-        log("Tried to fetch the shortcode of a user with discord id: " + disc_id);
-        log("Failed with error:\n" + error);
+        log("Tried to fetch the shortcode of a user with discord id: " + disc_id + "Failed with error:\n" + error, guild.guild.id);
     });
     return result;
 }
@@ -469,6 +449,7 @@ async function configure(){
         for(var ind in servers){
             server = servers[ind];
             console.log("Beginning configure for server: " + server.SERVER_NAME);
+            curr_guild.server_name = server.SERVER_NAME;
             curr_guild.welcome_msg = server.WELCOME_MESSAGE;
             curr_guild.verified_msg = server.VERIFIED_MESSAGE;
             curr_guild.auth_web_url = server.AUTH_WEBSITE_URL;
@@ -483,7 +464,7 @@ async function configure(){
             curr_guild.roles = {};
             for(var role in server.roles){
                 console.log("Fetching role: " + role);
-                curr_guild.roles[role] = await get_role(server.roles[role], curr_guild.guild).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error));
+                curr_guild.roles[role] = await get_role(server.roles[role], curr_guild.guild).then((role)=> role).catch((error)=>log("Role fetch error on role " + role + " with error" + error, server.SERVER_ID));
             }
 
             curr_guild.year_roles = {};
@@ -508,15 +489,16 @@ async function configure(){
             });
 
             guilds[server.SERVER_ID] = curr_guild;
+            log("-----------BOT BEGINS-----------", server.SERVER_ID);
+            print_server_config(server.SERVER_ID);
         }
     } catch(error){
-        log("FATAL!!!");
-        log("CONFIGURATION FAILED WITH ERROR:");
-        log(error);
+        console.log("FATAL!!!");
+        console.log("CONFIGURATION FAILED WITH ERROR:");
+        console.log(error);
     } finally{
         configured = true;
-        log("-----------BOT BEGINS-----------");
-        log("Bot Configured successfully!");
-        print_server_config();        
+        console.log("-----------BOT BEGINS-----------");
+        console.log("Bot Configured successfully!");
     }
 }
