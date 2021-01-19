@@ -146,8 +146,8 @@ bot.on('message', message => {
         var logbook = guilds[message.guild.id].logbook
         log("-----BEGIN LOGBOOK-----", message.guild.id);
         log("LOGS:" + logbook.length, message.guild.id);
-        logbook.forEach((log) => log("`"+log+"`", , message.guild.id));
-        log("-----END   LOGBOOK-----", , message.guild.id);
+        logbook.forEach((log) => log("`"+log+"`", message.guild.id));
+        log("-----END   LOGBOOK-----", message.guild.id);
     }
 });
 
@@ -164,10 +164,10 @@ bot.on('message', message => {
         message.mentions.users.forEach(function(member){
             var guildmember = get_member(member.id, message.guild);
             if(guildmember == null){
-                log("Trying to add member to committee but unknown member with userid: " + member.id, , message.guild.id);
+                log("Trying to add member to committee but unknown member with userid: " + member.id, message.guild.id);
             }else{
                 guildmember.roles.add(guilds[message.guild.id].committee_role).catch((error)=>log("Tried adding member:" + member.id + "to committee but failed with error:" + error));
-                log("Successfully added member " + member.username+ " to committee group :) by user with username:" + message.author.username, , message.guild.id);
+                log("Successfully added member " + member.username+ " to committee group :) by user with username:" + message.author.username,  message.guild.id);
                 
             }
         });
@@ -205,43 +205,6 @@ bot.on('guildMemberAdd', member => {
     }
     send_user_auth_url(member);
 });
-
-/*
-* Tracks voice channel state changes
-* This is used to regulate meeting rooms
-* When a meeting room is completely empty, it begins the countdown before the room is deleted
-* If a room countdown has begun, then someone joins the voice chat, it resets the countdown
-*/
-bot.on('voiceStateUpdate', function(oldState, newState){
-    //Check when voice channel is left (setTimeout()) function
-    
-    //Check for channel change 
-    if(oldState.channel == newState.channel){
-        return;
-    }
-
-    //If a voice channel is left
-    if(oldState.channel != null){
-        if(Object.keys(meeting_rooms).includes(oldState.channel.name)){
-
-            var name = oldState.channel.name;
-            if(oldState.channel.members.size == 0){
-                var meeting_room = meeting_rooms[name];
-                get_channel(meeting_room.chat, oldState.guild).send("There is no one in the voice chat, this means the meeting will end in " + server.MEETING_TIMEOUT_TIME + " seconds");
-                get_member(meeting_room["owner_id"], oldState.guild).send("Your meeting room "  + name + " will delete in " + server.MEETING_TIMEOUT_TIME + " seconds unless the voice chat becomes active in this time period. You have been emailed a copy of the meeting chat");
-                meeting_rooms[name]["timeout"] = setTimeout(function(){
-                    delete_room(oldState.channel.name);
-                }, server.MEETING_TIMEOUT_TIME * 1000);
-            }
-        }
-    }
-    //End timer if voice chat is joined, (clearTimeout()) function
-    if(newState.channel != null && Object.keys(meeting_rooms).includes(newState.channel.name)){
-        //If channel name is in new state, reset timer
-        var name = newState.channel.name;
-        clearTimeout(meeting_rooms[name]["timeout"]);
-    }
-})
 
 /*
  * ==================================================
@@ -405,9 +368,9 @@ async function notify_unverified_users(){
  */
 function send_user_auth_url(member){
     var guild = guilds[member.guild.id];
-    member.send(guild.welcome_msg)
-    member.send(guild.auth_web_url+ member.id);
-    member.send("This link will only work for your account! There is no point sharing it with other users");
+    member.send(guild.welcome_msg).catch((error)=>{log("Error trying to send: " + member + " a message")});
+    member.send(guild.auth_web_url+ member.id).catch((error)=>{log("Error trying to send: " + member + " a message")});
+    member.send("This link will only work for your account! There is no point sharing it with other users").catch((error)=>{log("Error trying to send: " + member + " a message")});
     log("Sent custom URL to user: " + member.displayName + " for verification", member.guild.id);
 }
 
@@ -449,12 +412,13 @@ async function configure(){
         for(var ind in servers){
             server = servers[ind];
             console.log("Beginning configure for server: " + server.SERVER_NAME);
+            curr_guild = {}
             curr_guild.server_name = server.SERVER_NAME;
             curr_guild.welcome_msg = server.WELCOME_MESSAGE;
             curr_guild.verified_msg = server.VERIFIED_MESSAGE;
+            console.log(curr_guild);
             curr_guild.auth_web_url = server.AUTH_WEBSITE_URL;
             curr_guild.organisation = server.ORGANISATION;
-            curr_guild = {};
             curr_guild.logbook = [];
             curr_guild.guild = bot.guilds.cache.get(server.SERVER_ID);
             curr_guild.log_channel = get_channel(server.LOG_CHANNEL_ID, curr_guild.guild);
