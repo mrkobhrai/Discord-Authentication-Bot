@@ -221,7 +221,7 @@ async function on_queue(snapshot, prevChildKey, guild_id){
     db_user = snapshot.val();
     var member = await get_member_uncached(db_user.id, curr_guild.guild);
     if(member == null){
-        log("User not found through login with shortcode:" + db_user.name + ". Discord ID attempted:" + db_user.id, guild_id);
+        log("User not found through login with shortcode:" + db_user.shortcode + ". Discord ID attempted:" + db_user.id, guild_id);
         curr_guild.queue_ref.child(snapshot.key).remove();
     }else{
         var shortcode = db_user.shortcode;
@@ -240,25 +240,26 @@ async function on_queue(snapshot, prevChildKey, guild_id){
                         //Reset member roles
                         await member.roles.set([]);
                     }
-                    member.setNickname(db_user.name).catch((error)=>log("Can't set the nickname:" + db_user.name + " for this user(id):" + member.id + "->" + error, guild_id));
+                    if (db_user.name) {
+                        member.setNickname(db_user.name).catch((error)=>log("Can't set the nickname:" + db_user.name + " for this user(id):" + member.id + "->" + error, guild_id));
+                    }
                     member.roles.add(curr_guild.roles["Verified"])
                     if(Object.keys(curr_guild.roles).includes(course)){
                         member.roles.add(curr_guild.roles[course]);
                     }else{
-                        log("Unidentified course :" + course + " when trying to add member" + db_user.name, guild_id);
+                        log("Unidentified course :" + course + " when trying to add member" + db_user.id, guild_id);
                     }
                     if(Object.keys(guilds[guild_id].year_roles).includes(year)){
                         member.roles.add(curr_guild.year_roles[year]);
                     }else{
-                        log("Unidentified year :" + year + " when trying to add member" + db_user.name, guild_id);
+                        log("Unidentified year :" + year + " when trying to add member" + db_user.id, guild_id);
                     }
-
-                    log("Member : "+ db_user.name +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id +" and course group: "+course+" and year: "+ year +"!", guild_id);
+                    log("Member : "+ db_user.shortcode +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id +" and course group: "+course+" and year: "+ year +"!", guild_id);
                     var userid = member.toJSON().userID.toString();
-                    curr_guild.verified_users.child(shortcode).set({"username": member.user.username, "name": db_user.name, "disc_id" : userid, "email": db_user.email, "course": course, "year": year});
+                    curr_guild.verified_users.child(shortcode).set({"username": member.user.username, "name": db_user.name || null, "disc_id" : userid, "email": db_user.email, "course": course, "year": year});
                     member.send(curr_guild.verified_msg);
                 }else{
-                    log("Member: " + db_user.name + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id, guild_id);
+                    log("Member: " + db_user.id + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id, guild_id);
                     member.send("This shortcode is already registered to a Discord User!");
                     member.send('If you believe this is an error, please contact an Admin');
                 }
