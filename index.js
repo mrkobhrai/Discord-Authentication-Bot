@@ -326,7 +326,7 @@ async function get_member_uncached(id, guild){
  * Prints the server configuration
  */
 function print_server_config(guild_id){
-    log("Server Config:\n-> SERVER: " + guilds[guild_id].toString(), guild_id);    
+    log("Server Config:\n-> SERVER: " + guilds[guild_id].server_name, guild_id);    
 }
 
 /*
