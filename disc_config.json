@@ -24,5 +24,21 @@
         "AUTH_WEBSITE_URL":"https://discord.docsoc.co.uk/",
         "VERIFIED_MESSAGE": "Well done! You've been verified as a member! You are now free to explore the server and join in with DoCSoc Events!\n Use the '!help' command in any channel to get a list of available commands",
         "ORGANISATION": "DoCSoc"
+    },
+    {  
+        "SERVER_NAME":"docsoc_ctf",
+        "SERVER_ID": "796493818345160725",
+        "LOG_CHANNEL_ID": "798697477934809158",
+        "WELCOME_CHANNEL_ID":"796493818345160728",
+        "roles":{
+            "Verified": "798697586865078273"
+        },
+        "years":{
+        },
+        "COMMITTEE_ROLE_SAFE": "796498544524787722",
+        "WELCOME_MESSAGE": "Just one last step to get into the IC DoCSoc CTF server :)\n To complete your sign-up and verify your Discord Account, please login using your Imperial login details below:\n",
+        "AUTH_WEBSITE_URL":"https://ctfdiscord.docsoc.co.uk/",
+        "VERIFIED_MESSAGE": "Well done! You've been verified as a member! You are now free to explore the server and join in with DoCSoc CTF Teams!\n Use the '!help' command in any channel to get a list of available commands",
+        "ORGANISATION": "DoCSoc"
     }
 ]
