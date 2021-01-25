@@ -345,7 +345,7 @@ async function notify_unverified_users(){
     var notifications = 0;
     if(configured){
         for(var guild_id in guilds){
-            guilds[guild_id].guild.members.fetch().then((members)=>{
+            await guilds[guild_id].guild.members.fetch().then((members)=>{
                 log("Beginning: Notifiying Unverified Users", guild_id);
                 members.forEach((guildMember)=>{
                     if(!guildMember.roles.cache.find( role => role.id === guilds[guild_id].roles.Verified.id)){
