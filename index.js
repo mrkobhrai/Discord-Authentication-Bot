@@ -256,7 +256,7 @@ async function on_queue(snapshot, prevChildKey, guild_id){
                     }
                     log("Member : "+ db_user.shortcode +" signed up successfully with username: " + member.user.username + " and id: " + member.user.id +" and course group: "+course+" and year: "+ year +"!", guild_id);
                     var userid = member.toJSON().userID.toString();
-                    curr_guild.verified_users.child(shortcode).set({"username": member.user.username, "name": db_user.name || null, "disc_id" : userid, "email": db_user.email, "course": course, "year": year});
+                    curr_guild.verified_users.child(shortcode).set({"username": member.user.username, "name": db_user.name || null, "disc_id" : userid, "email": db_user.email, "course": course || null, "year": year || null});
                     member.send(curr_guild.verified_msg);
                 }else{
                     log("Member: " + db_user.id + " signed in successfully. \n However this shortcode is already associated with discord id: "+ fetched_snapshot.val().disc_id + "\n so can't be associated with discord id: " + snapshot.val().id, guild_id);
