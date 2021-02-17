@@ -368,6 +368,7 @@ async function notify_unverified_users(){
  * Given a member object, sends the member their custom auth url
  */
 function send_user_auth_url(member){
+    return;
     var guild = guilds[member.guild.id];
     member.send(guild.welcome_msg).catch((error)=>{log("Error trying to send: " + member + " a message")});
     member.send(guild.auth_web_url+ member.id).catch((error)=>{log("Error trying to send: " + member + " a message")});
@@ -445,12 +446,11 @@ async function configure(){
             curr_guild.committee_role = await get_role(server.COMMITTEE_ROLE_SAFE, curr_guild.guild).then((role)=>role).catch(log);
             curr_guild.queue_ref = database.ref(server.SERVER_NAME + "/queue");
             curr_guild.verified_users = database.ref(server.SERVER_NAME + "/users");
-
             curr_guild.queue_ref.on("child_added", async function(snapshot,prevChildKey){
                 if(!configured){
                     await configure();
                 }
-                on_queue(snapshot,prevChildKey, server.SERVER_ID)
+                on_queue(snapshot,prevChildKey, curr_guild.guild)
             });
 
             guilds[server.SERVER_ID] = curr_guild;
