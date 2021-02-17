@@ -368,7 +368,6 @@ async function notify_unverified_users(){
  * Given a member object, sends the member their custom auth url
  */
 function send_user_auth_url(member){
-    return;
     var guild = guilds[member.guild.id];
     member.send(guild.welcome_msg).catch((error)=>{log("Error trying to send: " + member + " a message")});
     member.send(guild.auth_web_url+ member.id).catch((error)=>{log("Error trying to send: " + member + " a message")});
