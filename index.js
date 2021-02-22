@@ -212,6 +212,9 @@ bot.on('guildMemberAdd', member => {
  * ==================================================
  */
 
+function wrapper(guild_id) {
+    return async function(snapshot, prevChildKey){on_queue(snapshot, prevChildKey, guild_id)}
+}
 async function on_queue(snapshot, prevChildKey, guild_id){
     curr_guild = guilds[guild_id];
     if(!configured){
@@ -280,8 +283,8 @@ async function on_queue(snapshot, prevChildKey, guild_id){
  * Logs to both console and to discord log channel if it exists
  */
 function log(log, guild_id){
-    console.log(log);
     var curr_guild = guilds[guild_id];
+    console.log(curr_guild.server_name + ":" + log);
     if(curr_guild != null){
         logbook = curr_guild.logbook;
         log_channel = curr_guild.log_channel;
@@ -444,12 +447,7 @@ async function configure(){
             curr_guild.queue_ref = database.ref(server.SERVER_NAME + "/queue");
             curr_guild.verified_users = database.ref(server.SERVER_NAME + "/users");
             guilds[server.SERVER_ID] = curr_guild;
-            curr_guild.queue_ref.on("child_added", async function(snapshot,prevChildKey){
-                if(!configured){
-                    await configure();
-                }
-                on_queue(snapshot,prevChildKey, guilds[server.SERVER_ID].guild.id)
-            });
+            curr_guild.queue_ref.on('child_added', wrapper(guilds[server.SERVER_ID].guild.id));
 
             log("-----------BOT BEGINS-----------", server.SERVER_ID);
             print_server_config(server.SERVER_ID);
