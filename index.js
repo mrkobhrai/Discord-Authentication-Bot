@@ -412,12 +412,10 @@ async function configure(){
         });
         for(var ind in servers){
             server = servers[ind];
-            console.log("Beginning configure for server: " + server.SERVER_NAME);
             curr_guild = {}
             curr_guild.server_name = server.SERVER_NAME;
             curr_guild.welcome_msg = server.WELCOME_MESSAGE;
             curr_guild.verified_msg = server.VERIFIED_MESSAGE;
-            console.log(curr_guild);
             curr_guild.auth_web_url = server.AUTH_WEBSITE_URL;
             curr_guild.organisation = server.ORGANISATION;
             curr_guild.logbook = [];
@@ -445,14 +443,14 @@ async function configure(){
             curr_guild.committee_role = await get_role(server.COMMITTEE_ROLE_SAFE, curr_guild.guild).then((role)=>role).catch(log);
             curr_guild.queue_ref = database.ref(server.SERVER_NAME + "/queue");
             curr_guild.verified_users = database.ref(server.SERVER_NAME + "/users");
+            guilds[server.SERVER_ID] = curr_guild;
             curr_guild.queue_ref.on("child_added", async function(snapshot,prevChildKey){
                 if(!configured){
                     await configure();
                 }
-                on_queue(snapshot,prevChildKey, curr_guild.guild)
+                on_queue(snapshot,prevChildKey, guilds[server.SERVER_ID].guild.id)
             });
 
-            guilds[server.SERVER_ID] = curr_guild;
             log("-----------BOT BEGINS-----------", server.SERVER_ID);
             print_server_config(server.SERVER_ID);
         }
