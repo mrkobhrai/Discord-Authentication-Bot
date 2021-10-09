@@ -617,7 +617,6 @@ async function sync_meetings(){
  * authentication URL
  */
 async function notify_unverified_users(){
-    return;
     var notifications = 0;
     if(configured){
         log("Beginning: Notifiying Unverified Users");
